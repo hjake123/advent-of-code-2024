@@ -1,4 +1,4 @@
-workspace = { members = ["day01"] }
+workspace = { members = ["day00"] }
 [package]
 name = "advent-of-code-2024"
 version = "0.1.0"
@@ -7,4 +7,4 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-day01 = { version = "0.1.0", path = "day01" }
+day00 = { version = "0.1.0", path = "day00" }
