@@ -7,8 +7,13 @@ name = "advent-of-code-2024"
 version = "0.1.0"
 dependencies = [
  "day00",
+ "day01",
 ]
 
 [[package]]
 name = "day00"
+version = "0.1.0"
+
+[[package]]
+name = "day01"
 version = "0.1.0"

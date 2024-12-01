@@ -1,4 +1,4 @@
-workspace = { members = ["day00"] }
+workspace = { members = ["day00", "day01"] }
 [package]
 name = "advent-of-code-2024"
 version = "0.1.0"
@@ -8,3 +8,4 @@ edition = "2021"
 
 [dependencies]
 day00 = { version = "0.1.0", path = "day00" }
+day01 = { version = "0.1.0", path = "day01" }
