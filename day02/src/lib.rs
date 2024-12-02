@@ -70,11 +70,8 @@ fn is_safe_vec_dampened(numbers: &Vec<i32>) -> bool {
 }
 
 fn retry_without_index(numbers: &Vec<i32>, index: usize) -> bool {
-    // println!("Problem in {:?} ", numbers);
-    // println!("Dampening error by removing index {}, which is {} ", index, numbers[index]);
     let mut pruned_numbers = numbers.to_vec();
     pruned_numbers.remove(index);
-    // println!("Resulting vec is {:?}", pruned_numbers);
     return is_safe_vec(pruned_numbers)
 }
 
