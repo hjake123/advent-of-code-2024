@@ -34,12 +34,63 @@ fn is_safe_line(line: &str) -> bool {
 
 fn not_safe_diff(a: i32, b: i32, increasing: bool) -> bool {
     let diff = b - a;
-    // println!("{:?} {:?} {:?} {:?} {:?}", a, b, diff, increasing, ((diff < 0) == increasing));
     (diff > 3 || diff < -3) || ((diff < 0) == increasing)
 }
 
 pub fn run_b(input: &str) -> i32 {
-    0
+    let mut sum = 0;
+    for line in input.lines() {
+        if is_safe_line_dampened(line) {
+            sum += 1;
+        }   
+    }
+    sum
+}
+
+fn is_safe_line_dampened(line: &str) -> bool {
+    let mut prev: Option<_> = None;
+    let mut increasing: Option<bool> = None;
+    let mut already_dampened = false;
+    let mut turn_count = 0;
+    
+    for symbol in line.split_whitespace() {
+        let number: i32 = symbol.parse().unwrap();
+
+        if prev.is_some() {
+            let prev: i32 = prev.unwrap();
+            if prev == number {
+                if already_dampened {
+                    return false
+                }
+                already_dampened = true;
+                continue;
+            }
+            if increasing.is_none() {
+                increasing = Some(prev < number);
+            }
+
+            let diff = number - prev;
+            let wrong_direction = (diff < 0) == increasing.unwrap();
+            let not_safe = (diff > 3 || diff < -3) || wrong_direction;
+
+            if wrong_direction && turn_count < 3 {
+                increasing = Some(!increasing.unwrap());
+                already_dampened = true;
+                continue;
+            }
+
+            if not_safe {
+                if already_dampened {
+                    return false
+                }
+                already_dampened = true;
+                continue;
+            }
+        }
+        prev = Some(number);
+        turn_count += 1;
+    }
+    true
 }
 
 #[cfg(test)]
@@ -62,6 +113,18 @@ mod tests {
     #[test]
     fn b() {
         let result = run_b(&fs::read_to_string("./test.txt").unwrap());
-        assert_eq!(result, 0);
+        assert_eq!(result, 4);
+    }
+
+    #[test]
+    fn b_tricky_case() {
+        let result = run_b("29 28 30 31 32");
+        assert_eq!(result, 1);
+    }
+
+    #[test]
+    fn b_tricky_case_2() {
+        let result = run_b("29 28 30 31 32");
+        assert_eq!(result, 1);
     }
 }
