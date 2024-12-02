@@ -11,19 +11,24 @@ pub fn run_a(input: &str) -> i32 {
 }
 
 fn is_safe_line(line: &str) -> bool {
+    is_safe_vec(line.split_whitespace().map(|symbol| symbol.parse().unwrap()).collect())
+}
+
+fn is_safe_vec(numbers: Vec<i32>) -> bool {
     let mut prev: Option<_> = None;
     let mut increasing: Option<bool> = None;
     
-    for symbol in line.split_whitespace() {
-        let number = symbol.parse().unwrap();
+    // println!("Testing {:?}", numbers);
+    for number in numbers {
         if prev.is_some() {
-            if prev.unwrap() == number {
+            let prev = prev.unwrap();
+            if prev == number {
                 return false
             }
             if increasing.is_none() {
-                increasing = Some(prev.unwrap() < number);
+                increasing = Some(prev < number);
             }
-            if not_safe_diff(prev.unwrap(), number, increasing.unwrap()) {
+            if not_safe_diff(prev, number, increasing.unwrap()) {
                 return false
             }
         }
@@ -31,6 +36,7 @@ fn is_safe_line(line: &str) -> bool {
     }
     true
 }
+
 
 fn not_safe_diff(a: i32, b: i32, increasing: bool) -> bool {
     let diff = b - a;
@@ -42,55 +48,49 @@ pub fn run_b(input: &str) -> i32 {
     for line in input.lines() {
         if is_safe_line_dampened(line) {
             sum += 1;
-        }   
+        } else {
+            println!{"Line was bad"}
+        }
     }
     sum
 }
 
 fn is_safe_line_dampened(line: &str) -> bool {
+    is_safe_vec_dampened(&line.split_whitespace().map(|symbol| symbol.parse().unwrap()).collect())
+}
+
+fn is_safe_vec_dampened(numbers: &Vec<i32>) -> bool {
     let mut prev: Option<_> = None;
     let mut increasing: Option<bool> = None;
-    let mut already_dampened = false;
-    let mut turn_count = 0;
+    let mut index = 0;
+    println!("");
     
-    for symbol in line.split_whitespace() {
-        let number: i32 = symbol.parse().unwrap();
-
+    for number in numbers {
         if prev.is_some() {
-            let prev: i32 = prev.unwrap();
-            if prev == number {
-                if already_dampened {
-                    return false
-                }
-                already_dampened = true;
-                continue;
+            let prev = prev.unwrap();
+            if prev == *number {
+                return retry_without_index(numbers, index)
             }
             if increasing.is_none() {
-                increasing = Some(prev < number);
+                increasing = Some(prev < *number);
             }
-
-            let diff = number - prev;
-            let wrong_direction = (diff < 0) == increasing.unwrap();
-            let not_safe = (diff > 3 || diff < -3) || wrong_direction;
-
-            if wrong_direction && turn_count < 3 {
-                increasing = Some(!increasing.unwrap());
-                already_dampened = true;
-                continue;
-            }
-
-            if not_safe {
-                if already_dampened {
-                    return false
-                }
-                already_dampened = true;
-                continue;
+            if not_safe_diff(prev, *number, increasing.unwrap()) {
+                return retry_without_index(numbers, index - 1) || retry_without_index(numbers, index)
             }
         }
-        prev = Some(number);
-        turn_count += 1;
+        prev = Some(*number);
+        index += 1;
     }
     true
+}
+
+fn retry_without_index(numbers: &Vec<i32>, index: usize) -> bool {
+    println!("Problem in {:?} ", numbers);
+    println!("Dampening error by removing index {}, which is {} ", index, numbers[index]);
+    let mut pruned_numbers = numbers.to_vec();
+    pruned_numbers.remove(index);
+    println!("Resulting vec is {:?}", pruned_numbers);
+    return is_safe_vec(pruned_numbers)
 }
 
 #[cfg(test)]
@@ -124,7 +124,7 @@ mod tests {
 
     #[test]
     fn b_tricky_case_2() {
-        let result = run_b("29 28 30 31 32");
-        assert_eq!(result, 1);
+        let result = run_b("29 28 27 31 32");
+        assert_eq!(result, 0);
     }
 }
