@@ -1,5 +1,3 @@
-use core::num;
-
 pub fn run_a(input: &str) -> i32 {
     let mut sum = 0;
     for line in input.lines() {
