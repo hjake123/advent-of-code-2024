@@ -1,6 +1,7 @@
 use std::fs;
 use std::env;
 
+// Update this each time you complete a day.
 const MAX_DAY: i32 = 2;
 
 fn main() {
@@ -17,6 +18,8 @@ fn main() {
     run_day(daynum);
 }
 
+// This method controls actually running the days.
+// Add a new case for each new day.
 fn run_day(daynum: Option<i32>) {
     match daynum {
         Some(1) => {
