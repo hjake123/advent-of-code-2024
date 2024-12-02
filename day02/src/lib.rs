@@ -48,8 +48,6 @@ pub fn run_b(input: &str) -> i32 {
     for line in input.lines() {
         if is_safe_line_dampened(line) {
             sum += 1;
-        } else {
-            println!{"Line was bad"}
         }
     }
     sum
@@ -60,36 +58,25 @@ fn is_safe_line_dampened(line: &str) -> bool {
 }
 
 fn is_safe_vec_dampened(numbers: &Vec<i32>) -> bool {
-    let mut prev: Option<_> = None;
-    let mut increasing: Option<bool> = None;
-    let mut index = 0;
-    println!("");
-    
-    for number in numbers {
-        if prev.is_some() {
-            let prev = prev.unwrap();
-            if prev == *number {
-                return retry_without_index(numbers, index)
-            }
-            if increasing.is_none() {
-                increasing = Some(prev < *number);
-            }
-            if not_safe_diff(prev, *number, increasing.unwrap()) {
-                return retry_without_index(numbers, index - 1) || retry_without_index(numbers, index)
-            }
-        }
-        prev = Some(*number);
-        index += 1;
+    if is_safe_vec(numbers.to_vec()) {
+        return true
     }
-    true
+    let mut i = 0;
+    while i < numbers.len() {
+        if retry_without_index(numbers, i) {
+            return true
+        }
+        i += 1;
+    }
+    false
 }
 
 fn retry_without_index(numbers: &Vec<i32>, index: usize) -> bool {
-    println!("Problem in {:?} ", numbers);
-    println!("Dampening error by removing index {}, which is {} ", index, numbers[index]);
+    // println!("Problem in {:?} ", numbers);
+    // println!("Dampening error by removing index {}, which is {} ", index, numbers[index]);
     let mut pruned_numbers = numbers.to_vec();
     pruned_numbers.remove(index);
-    println!("Resulting vec is {:?}", pruned_numbers);
+    // println!("Resulting vec is {:?}", pruned_numbers);
     return is_safe_vec(pruned_numbers)
 }
 
