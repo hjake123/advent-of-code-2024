@@ -1,6 +1,9 @@
 #[derive(Debug, PartialEq, Eq)]
 enum ParseState {
     START,
+    DO,
+    DONT,
+    MUL,
     A,
     B
 }
@@ -10,7 +13,8 @@ pub struct Parser {
     state: ParseState,
     start_score: usize,
     a_buff: String,
-    b_buff: String
+    b_buff: String,
+    active: bool
 }
 
 impl Parser {
@@ -20,6 +24,7 @@ impl Parser {
             start_score: 0,
             a_buff: String::new(),
             b_buff: String::new(),
+            active: true
         }
     }
 
@@ -34,8 +39,45 @@ impl Parser {
         let glyph = glyphs.chars().collect::<Vec<char>>()[*index];
         match self.state {
             ParseState::START => {
+                if glyph == 'd' {
+                    self.state = ParseState::DO;
+                    self.start_score = 1;
+                } else if glyph == 'm' {
+                    self.state = ParseState::MUL;
+                    self.start_score = 1;
+                }
+            }
+            ParseState::DO => {
+                let start_pattern: &str = "do()";
+                if self.start_score < start_pattern.len() && glyph != start_pattern.chars().collect::<Vec<char>>()[self.start_score] {
+                    if self.start_score == 2 && glyph == 'n' {
+                        self.state = ParseState::DONT;
+                    } else {
+                        self.reset();
+                        return None;
+                    }
+                }
+                self.start_score += 1;
+                if self.start_score >= start_pattern.len() {
+                    self.active = true;
+                    self.reset();
+                }
+            }
+            ParseState::DONT => {
+                let start_pattern: &str = "don't()";
+                if self.start_score < start_pattern.len() && glyph != start_pattern.chars().collect::<Vec<char>>()[self.start_score] {
+                    self.reset();
+                    return None;
+                }
+                self.start_score += 1;
+                if self.start_score >= start_pattern.len() {
+                    self.active = false;
+                    self.reset();
+                }
+            }
+            ParseState::MUL => {
                 let start_pattern: &str = "mul(";
-                if self.start_score < start_pattern.len() && glyph != start_pattern.chars().collect::<Vec<char>>()[self.start_score]{
+                if self.start_score < start_pattern.len() && glyph != start_pattern.chars().collect::<Vec<char>>()[self.start_score] {
                     self.reset();
                     return None;
                 }
@@ -73,6 +115,10 @@ impl Parser {
     }
 
     fn calc_mult(&self) -> Option<i32> {
+        if !self.active {
+            return None
+        }
+
         let a = self.a_buff.parse();
         if a.is_err() {
             return None
