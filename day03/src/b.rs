@@ -35,8 +35,8 @@ impl Parser {
         self.state = ParseState::START;
     }
 
-    pub fn run(&mut self, glyphs: &str, index: &mut usize, sum: &mut i32) -> Option<i32> {
-        let glyph = glyphs.chars().collect::<Vec<char>>()[*index];
+    pub fn run(&mut self, glyphs: &Vec<char>, index: &mut usize, sum: &mut i32) -> Option<i32> {
+        let glyph = glyphs[*index];
         match self.state {
             ParseState::START => {
                 if glyph == 'd' {

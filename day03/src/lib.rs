@@ -6,8 +6,9 @@ pub fn run_a(input: &str) -> i32 {
     let mut parser = a::Parser::new();
 
     let mut index = 0;
+    let glyphs = &input.chars().collect::<Vec<char>>();
     while index < input.len() {
-        parser.run(&input, &mut index, &mut sum);
+        parser.run(glyphs, &mut index, &mut sum);
         index += 1;
     }
     sum
@@ -18,8 +19,9 @@ pub fn run_b(input: &str) -> i32 {
     let mut parser = b::Parser::new();
 
     let mut index = 0;
+    let glyphs = &input.chars().collect::<Vec<char>>();
     while index < input.len() {
-        parser.run(&input, &mut index, &mut sum);
+        parser.run(glyphs, &mut index, &mut sum);
         index += 1;
     }
     sum
