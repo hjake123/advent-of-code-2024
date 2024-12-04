@@ -1,14 +1,28 @@
-use crate::ParseState;
+#[derive(Debug, PartialEq, Eq)]
+enum ParseState {
+    START,
+    A,
+    B
+}
 
 #[derive(Debug)]
 pub struct Parser {
-    pub state: ParseState,
-    pub start_score: usize,
-    pub a_buff: String,
-    pub b_buff: String
+    state: ParseState,
+    start_score: usize,
+    a_buff: String,
+    b_buff: String
 }
 
 impl Parser {
+    pub fn new() -> Parser {
+        return Parser {
+            state: ParseState::START,
+            start_score: 0,
+            a_buff: String::new(),
+            b_buff: String::new(),
+        }
+    }
+
     fn reset(&mut self) {
         self.a_buff.clear();
         self.b_buff.clear();
