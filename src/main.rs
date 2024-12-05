@@ -2,7 +2,7 @@ use std::fs;
 use std::env;
 
 // Update this each time you complete a day.
-const MAX_DAY: i32 = 3;
+const MAX_DAY: i32 = 4;
 
 fn main() {
     let mut daynum: Option<i32> = None;
@@ -33,6 +33,10 @@ fn run_day(daynum: Option<i32>) {
         Some(3) => {
             println!("Day 3a: {}", day03::run_a(&fs::read_to_string("./input/day03.txt").unwrap()));
             println!("Day 3b: {}", day03::run_b(&fs::read_to_string("./input/day03.txt").unwrap()));
+        },
+        Some(4) => {
+            println!("Day 4a: {}", day04::run_a(&fs::read_to_string("./input/day04.txt").unwrap()));
+            println!("Day 4b: {}", day04::run_b(&fs::read_to_string("./input/day04.txt").unwrap()));
         },
         Some(n) => {
             println!("Can't run day number {}", n)
