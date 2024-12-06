@@ -65,6 +65,10 @@ impl Direction {
             }
         }
     }
+
+    pub fn is_dir_char_other_then_own(&self, ch: char) -> bool {
+        ch != self.to_char() && (ch == '^' || ch == '<' || ch == '>' || ch == 'v')
+    }
 }
 
 #[derive(Debug)]
@@ -103,7 +107,7 @@ impl Guard {
                 return false
             }   
     
-            if layout[new_y][new_x] == '#' {
+            if layout[new_y][new_x] == '#' || self.dir.is_dir_char_other_then_own(layout[new_y][new_x]) {
                 layout[new_y][new_x] = self.dir.to_char();
                 self.dir = self.dir.right_from();
             } else if layout[new_y][new_x] == self.dir.to_char() {
