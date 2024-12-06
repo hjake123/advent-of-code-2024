@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "advent-of-code-2024"
-version = "0.3.0"
+version = "0.24.0"
 dependencies = [
  "day00",
  "day01",
