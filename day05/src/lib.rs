@@ -40,10 +40,12 @@ fn parse_rules(input: &str) -> (Ruleset, Ruleset, Lines<'_>) {
         let mut split_line = line.split('|');
         let left: i32 = split_line.next().unwrap().parse().unwrap();
         let right: i32 = split_line.next().unwrap().parse().unwrap();
+
         if !after_rules.contains_key(&left) {
             after_rules.insert(left, RefCell::new(Vec::new()));
         }
         after_rules.get(&left).unwrap().borrow_mut().push(right);
+        
         if !before_rules.contains_key(&right) {
             before_rules.insert(right, RefCell::new(Vec::new()));
         }
