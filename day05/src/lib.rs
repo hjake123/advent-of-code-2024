@@ -45,7 +45,7 @@ fn parse_rules(input: &str) -> (Ruleset, Ruleset, Lines<'_>) {
             after_rules.insert(left, RefCell::new(Vec::new()));
         }
         after_rules.get(&left).unwrap().borrow_mut().push(right);
-        
+
         if !before_rules.contains_key(&right) {
             before_rules.insert(right, RefCell::new(Vec::new()));
         }
@@ -150,6 +150,6 @@ mod tests {
     #[test]
     fn b() {
         let result = run_b(&fs::read_to_string("./test.txt").unwrap());
-        assert_eq!(result, 1);
+        assert_eq!(result, 123);
     }
 }
