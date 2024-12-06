@@ -95,43 +95,52 @@ impl Guard {
     }
 
     pub fn part_b_step(&mut self, layout: &mut Layout) -> bool {
-        let (new_x, new_y) = self.dir.offset(self.x, self.y).expect("Tried to move off screen!");
-        if !(layout[self.y][self.x] != '.') {
-            layout[self.y][self.x] = self.dir.to_char();
-        }
-        if !in_bounds(layout, new_x, new_y) {
-            return false
-        }   
-
-        if layout[new_y][new_x] == '#' || layout[new_y][new_x] == '@' {
-            self.dir = self.dir.right_from();
-            layout[new_y][new_x] = '@';
-        } else {
-            // Check the new part B with this logic:
-            // If there is an already used obstacle on your right
-            // then this is a place where turning right would cause a loop.
-            let right_of_facing = self.dir.right_from();
-            let mut scanner = (self.x, self.y);
-            while in_bounds(layout, scanner.0, scanner.1) {
-                if layout[scanner.1][scanner.0] == '@' {
-                    self.visit_count += 1;
-                    break;
-                }
-                if layout[scanner.1][scanner.0] == '#' {
-                    break;
-                }
-                let possible_scanner = right_of_facing.offset(scanner.0, scanner.1);
-                if possible_scanner.is_none() {
-                    break;
-                }
-                scanner = possible_scanner.unwrap();
+        if let Some((new_x, new_y)) = self.dir.offset(self.x, self.y){
+            if !(layout[self.y][self.x] != '.') {
+                layout[self.y][self.x] = self.dir.to_char();
             }
+            if !in_bounds(layout, new_x, new_y) {
+                return false
+            }   
+    
+            if layout[new_y][new_x] == '#' || layout[new_y][new_x] == '@' {
+                self.dir = self.dir.right_from();
+                layout[new_y][new_x] = '@';
+            } else {
+                // Check the new part B with this logic:
+                // If there is an already used obstacle on your right
+                // then this is a place where turning right would cause a loop.
+                let mut dir = self.dir.right_from();
+                let mut scanner = (self.x, self.y);
+                loop {
+                    let next_scanner = dir.offset(scanner.0, scanner.1);
+                    if next_scanner.is_none() {
+                        break;
+                    }
+                    let next_scanner = next_scanner.unwrap();
 
-            // Normal stop logic resumes.
-            self.x = new_x;
-            self.y = new_y;
+                    if !in_bounds(layout, next_scanner.0, next_scanner.1){
+                        break;
+                    }
+
+                    if layout[next_scanner.1][next_scanner.0] == '@' {
+                        self.visit_count += 1;
+                        break;
+                    }
+                    if layout[next_scanner.1][next_scanner.0] == '#' {
+                        dir = dir.right_from();
+                    } else {
+                        scanner = next_scanner;
+                    }
+                }
+    
+                // Normal stop logic resumes.
+                self.x = new_x;
+                self.y = new_y;
+            }
+            return true
         }
-        true
+        false 
     }
 }
 
@@ -201,5 +210,17 @@ mod tests {
     fn b() {
         let result = run_b(&fs::read_to_string("./test.txt").unwrap());
         assert_eq!(result, 6);
+    }
+
+    #[test]
+    fn easy() {
+        let result = run_b(&fs::read_to_string("./easytest.txt").unwrap());
+        assert_eq!(result, 1);
+    }
+
+    #[test]
+    fn evil() {
+        let result = run_b(&fs::read_to_string("./eviltest.txt").unwrap());
+        assert_eq!(result, 1);
     }
 }
