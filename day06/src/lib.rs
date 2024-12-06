@@ -42,6 +42,23 @@ impl Direction {
             }
         }
     }
+
+    pub fn to_char(&self) -> char {
+        match *self {
+            Self::Up => {
+                '^'
+            }
+            Self::Right => {
+                '>'
+            }
+            Self::Down => {
+                'v'
+            }
+            Self::Left => {
+                '<'
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -69,6 +86,45 @@ impl Guard {
             self.y = new_y;
         }
         true
+    }
+
+    pub fn part_b_step(&mut self, layout: &mut Layout) -> bool {
+        let (new_x, new_y) = self.dir.offset(self.x, self.y);
+        if !(layout[self.y][self.x] != '.') {
+            layout[self.y][self.x] = self.dir.to_char();
+        }
+        if new_y >= layout.len() || new_x >= layout[new_y].len() {
+            return false
+        }   
+
+        if layout[new_y][new_x] == '#' {
+            self.dir = self.dir.right_from();
+        } else {
+            // Check the new part B with this logic:
+            // If there is a rightward path to your right,
+            // and no path in front of you,
+            // then the obstacle would put you onto your own past path, making you loop.
+            let right_of_facing = self.dir.right_from().offset(self.x, self.y);
+            if layout[right_of_facing.1][right_of_facing.0] == self.dir.right_from().to_char(){
+                self.visit_count += 1;
+                dbg!(&self);
+                let mut tmp = layout.to_vec();
+                tmp[new_y][new_x] = 'O';
+                print_grid(&tmp);
+            }
+            self.x = new_x;
+            self.y = new_y;
+        }
+        true
+    }
+}
+
+fn print_grid(vec2d: &Vec<Vec<char>>) {
+    for line in vec2d {
+        for ch in line {
+            print!("{}", ch);
+        }
+        println!();
     }
 }
 
@@ -105,7 +161,9 @@ pub fn run_a(input: &str) -> i32 {
 }
 
 pub fn run_b(input: &str) -> i32 {
-    0
+    let (mut layout, mut guard) = parse_layout(input);
+    while guard.part_b_step(&mut layout) {}
+    guard.visit_count
 }
 
 #[cfg(test)]
@@ -122,6 +180,6 @@ mod tests {
     #[test]
     fn b() {
         let result = run_b(&fs::read_to_string("./test.txt").unwrap());
-        assert_eq!(result, 1);
+        assert_eq!(result, 6);
     }
 }
