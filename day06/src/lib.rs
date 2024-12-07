@@ -108,7 +108,9 @@ impl Guard {
             }   
     
             if layout[new_y][new_x] == '#' || self.dir.is_dir_char_other_then_own(layout[new_y][new_x]) {
-                layout[new_y][new_x] = self.dir.to_char();
+                if  layout[new_y][new_x] == '#' {
+                    layout[new_y][new_x] = self.dir.to_char();
+                }
                 self.dir = self.dir.right_from();
             } else if layout[new_y][new_x] == self.dir.to_char() {
                 // Loop detected.
