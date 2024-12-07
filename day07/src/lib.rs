@@ -1,3 +1,5 @@
+use std::thread::{self, JoinHandle};
+
 mod part_a;
 mod part_b;
 
@@ -22,10 +24,21 @@ pub fn run_a(input: &str) -> i64 {
 
 pub fn run_b(input: &str) -> i64 {
     let mut sum = 0;
+    let mut handles: Vec<JoinHandle<i64>> = Vec::new();
     for line in input.lines() {
-        let (target, nums) = parse_line(line);
-        if part_b::test_variants(target, &nums) {
-            sum += target;
+        let line = line.to_owned();
+        handles.push(thread::spawn(move || {
+            let (target, nums) = parse_line(&line);
+            if part_b::test_variants(target, &nums) {
+                return target
+            }
+            0
+        }))
+    }
+    for handle in handles {
+        let res = handle.join();
+        if res.is_ok() {
+            sum += res.unwrap();
         }
     }
     sum
