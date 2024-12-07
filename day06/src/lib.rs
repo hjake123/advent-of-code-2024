@@ -163,20 +163,22 @@ pub fn run_a(input: &str) -> i32 {
 }
 
 pub fn run_b(input: &str) -> i32 {
-    let (layout, mut guard) = parse_layout(input);
+    let (mut layout, mut guard) = parse_layout(input);
     let startx = guard.x;
     let starty = guard.y;
+    while guard.step(&mut layout) {};
+    guard.visit_count = 0;
     for y in 0..layout.len() {
         for x in 0..layout[y].len() {
-            if layout[y][x] == '#' {
+            guard.x = startx;
+            guard.y = starty;
+            guard.dir = Direction::Up;
+            if layout[y][x] != 'X' {
                 continue;
             }
             let mut mutated_layout = layout.to_vec();
             mutated_layout[y][x] = '#';
             while guard.step_check_loop(&mut mutated_layout) {}
-            guard.x = startx;
-            guard.y = starty;
-            guard.dir = Direction::Up;
         }
     }
     guard.visit_count
