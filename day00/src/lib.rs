@@ -1,9 +1,9 @@
 pub fn run_a(input: &str) -> i32 {
-    0
+    input.len().try_into().unwrap()
 }
 
 pub fn run_b(input: &str) -> i32 {
-    0
+    input.len().try_into().unwrap()
 }
 
 #[cfg(test)]
