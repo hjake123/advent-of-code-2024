@@ -2,7 +2,7 @@ use std::fs;
 use std::env;
 
 // Update this each time you start a day.
-const MAX_DAY: i32 = 7;
+const MAX_DAY: i32 = 9;
 
 fn main() {
     let mut daynum: Option<i32> = None;
