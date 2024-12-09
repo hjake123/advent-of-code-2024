@@ -96,7 +96,7 @@ fn whole_file_compact(fs: &mut Vec<i32>) {
             i -= 1;
             filesize += 1;
         }
-        let opening = find_empty_space(fs, filesize, i);
+        let opening = find_empty_space(fs, filesize, i + 1);
         if opening.is_some() {
             let opening = opening.unwrap();
             for offset in 0..filesize {
@@ -153,10 +153,45 @@ mod tests {
     }
 
     #[test]
-    fn ct1() {
+    fn wfc1() {
         let mut vec = from_string("000..1.22");
         whole_file_compact(&mut vec);
         assert_eq!(vec, from_string("000221..."));
+    }
+
+    #[test]
+    fn wfc2() {
+        let mut vec = from_string("000....1111111.22");
+        whole_file_compact(&mut vec);
+        assert_eq!(vec, from_string("00022..1111111..."));
+    }
+
+    #[test]
+    fn wfc3() {
+        let mut vec = from_string("000.1..222222.33");
+        whole_file_compact(&mut vec);
+        assert_eq!(vec, from_string("0001.33222222..."));
+    }
+
+    #[test]
+    fn wfc4() {
+        let mut vec = from_string("0.....1111.22..");
+        whole_file_compact(&mut vec);
+        assert_eq!(vec, from_string("022...1111....."));
+    }
+
+    #[test]
+    fn wfc5() {
+        let mut vec = from_string("0.1.2.3.4.5.6");
+        whole_file_compact(&mut vec);
+        assert_eq!(vec, from_string("0615243......"));
+    }
+
+    #[test]
+    fn wfc6() {
+        let mut vec = from_string("....0000");
+        whole_file_compact(&mut vec);
+        assert_eq!(vec, from_string("0000...."));
     }
 
     #[test]
@@ -164,5 +199,12 @@ mod tests {
         let vec = from_string("000..1.22");
         let res = find_empty_space(&vec, 2, 5);
         assert_eq!(res, Some(3));
+    }
+
+    #[test]
+    fn fes2() {
+        let vec = from_string("000..1.22");
+        let res = find_empty_space(&vec, 2, 4);
+        assert_eq!(res, None);
     }
 }
