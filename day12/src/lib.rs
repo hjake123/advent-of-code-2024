@@ -1,69 +1,12 @@
-fn load(input: &str) -> (Vec<Vec<char>>, Vec<Vec<bool>>) {
-    let mut grid: Vec<Vec<char>> = Vec::new();
-    let mut visited: Vec<Vec<bool>> = Vec::new();
-
-    for line in input.lines() {
-        let mut row = Vec::new();
-        let mut vrow = Vec::new();
-
-        for letter in line.chars() {
-            row.push(letter);
-            vrow.push(false);
-        }
-        grid.push(row);
-        visited.push(vrow);
-    }
-    (grid, visited)
-}
-
-#[derive(Debug)]
-struct Region {
-    letter: char,
-    area: usize,
-    perimeter: usize
-}
-
-impl Region {
-    fn new(letter: char) -> Self {
-        Region{
-            letter,
-            area: 0,
-            perimeter: 0
-        }
-    }
-
-    fn tally(&mut self, grid: &Vec<Vec<char>>, visited: &mut Vec<Vec<bool>>, x: usize, y: usize) {
-        if y >= grid.len() || x >= grid[y].len() || grid[y][x] != self.letter {
-            self.perimeter += 1;
-            return;
-        }
-        if visited[y][x] {
-            return;
-        }
-        visited[y][x] = true;
-        self.area += 1;
-        self.tally(grid, visited, x + 1, y);
-        self.tally(grid, visited, x, y + 1);
-        if x > 0 {
-            self.tally(grid, visited, x - 1, y);
-        } else {
-            self.perimeter += 1;
-        }
-        if y > 0 {
-            self.tally(grid, visited, x, y - 1);
-        } else {
-            self.perimeter += 1;
-        }
-    }
-}
+mod a;
 
 pub fn run_a(input: &str) -> usize {
-    let (grid, mut visited) = load(input);
+    let (grid, mut visited) = a::load(input);
     let mut sum = 0;
     for y in 0..grid.len() {
         for x in 0..grid[y].len() {
             if !visited[y][x] {
-                let mut region = Region::new(grid[y][x]);
+                let mut region = a::Region::new(grid[y][x]);
                 region.tally(&grid, &mut visited, x, y);
                 sum += region.area * region.perimeter;
             }
@@ -72,8 +15,33 @@ pub fn run_a(input: &str) -> usize {
     sum
 }
 
+mod b;
+use std::collections::{HashMap, HashSet};
+
 pub fn run_b(input: &str) -> usize {
-    0
+    let (grid, mut region_grid) = b::load(input);
+    let mut region_id = 1;
+    let mut areas: HashMap<usize, usize> = HashMap::new();
+    for y in 0..grid.len() {
+        for x in 0..grid[y].len() {
+            if region_grid[y][x] == 0 {
+                areas.insert(region_id, b::mark_region(&grid, &mut region_grid, region_id, grid[y][x], x, y));
+                region_id += 1;
+            }
+        }
+    }
+    let mut counted: HashSet<usize> = HashSet::new();
+    let mut sum: usize = 0;
+    for y in 0..region_grid.len() {
+        for x in 0..region_grid[y].len() {
+            region_id = region_grid[y][x];
+            if !counted.contains(&region_id) {
+                counted.insert(region_id);
+                sum += areas.get(&region_id).unwrap() * b::scan_fence(&region_grid, region_id, x, y);
+            }
+        }
+    }
+    sum
 }
 
 #[cfg(test)]
@@ -100,8 +68,44 @@ mod tests {
     }
 
     #[test]
-    fn b() {
+    fn b_tiny_1() {
+        let result = run_b("00\n11");
+        assert_eq!(result, 16);
+    }
+
+    #[test]
+    fn b_tiny_2() {
+        let result = run_b("11\n01");
+        assert_eq!(result, 22);
+    }
+
+    #[test]
+    fn b1_abcde() {
+        let result = run_b(&fs::read_to_string("./easy1.txt").expect("No test file!"));
+        assert_eq!(result, 80);
+    }
+
+    #[test]
+    fn b2_island_o() {
+        let result = run_b(&fs::read_to_string("./easy2.txt").expect("No test file!"));
+        assert_eq!(result, 436);
+    }
+
+    #[test]
+    fn b3_big_e() {
+        let result = run_b(&fs::read_to_string("./b1.txt").expect("No test file!"));
+        assert_eq!(result, 236);
+    }
+
+    #[test]
+    fn b4_island_b() {
+        let result = run_b(&fs::read_to_string("./b2.txt").expect("No test file!"));
+        assert_eq!(result, 368);
+    }
+
+    #[test]
+    fn b5() {
         let result = run_b(&fs::read_to_string("./test.txt").expect("No test file!"));
-        assert_eq!(result, 1);
+        assert_eq!(result, 1206);
     }
 }
