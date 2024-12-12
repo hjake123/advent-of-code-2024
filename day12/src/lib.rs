@@ -1,100 +1,73 @@
-type Point = (usize, usize);
+fn load(input: &str) -> (Vec<Vec<char>>, Vec<Vec<bool>>) {
+    let mut grid: Vec<Vec<char>> = Vec::new();
+    let mut visited: Vec<Vec<bool>> = Vec::new();
+
+    for line in input.lines() {
+        let mut row = Vec::new();
+        let mut vrow = Vec::new();
+
+        for letter in line.chars() {
+            row.push(letter);
+            vrow.push(false);
+        }
+        grid.push(row);
+        visited.push(vrow);
+    }
+    (grid, visited)
+}
 
 #[derive(Debug)]
 struct Region {
     letter: char,
-    points: Vec<Point>
+    area: usize,
+    perimeter: usize
 }
 
 impl Region {
-    pub fn new(letter: char, x: usize, y: usize) -> Region{
-        let mut points = Vec::new();
-        points.push((x, y));
+    fn new(letter: char) -> Self {
         Region{
             letter,
-            points
-        }   
-    }
-
-    pub fn add(&mut self, x: usize, y: usize) {
-        self.points.push((x, y));
-    }
-
-    pub fn is_adjacent_to(&self, x: usize, y: usize) -> bool {
-        for point in &self.points {
-            if x > 0 && point.0 == x - 1 
-            || y > 0 && point.1 == y - 1
-            || point.0 == x + 1
-            || point.1 == y + 1 {
-                return true
-            }
-        }
-        false
-    }
-
-    pub fn area(&self) -> usize{
-        self.points.len()
-    }
-
-    pub fn perimeter(&self) -> usize{
-        let mut sum = 0;
-        for point in &self.points {
-            if point.0 == 0 || !self.points.contains(&(point.0 - 1, point.1)) {
-                sum += 1;
-            }
-            if point.1 == 0 || !self.points.contains(&(point.0, point.1 - 1)) {
-                sum += 1;
-            }
-            if !self.points.contains(&(point.0 + 1, point.1)) {
-                sum += 1;
-            }
-            if !self.points.contains(&(point.0, point.1 + 1)) {
-                sum += 1;
-            }
-        }
-        sum
-    }
-}
-
-fn load(input: &str) -> Vec<Vec<char>> {
-    let mut grid: Vec<Vec<char>> = Vec::new();
-    for line in input.lines() {
-        let mut row = Vec::new();
-        for letter in line.chars() {
-            row.push(letter);
-        }
-        grid.push(row);
-    }
-    grid
-}
-
-fn extract_regions(grid: Vec<Vec<char>>) -> Vec<Region> {
-    let mut regions: Vec<Region> = Vec::new();
-    for y in 0..grid.len() {
-        for x in 0..grid[y].len() {
-            let letter = grid[y][x];
-            let mut got_added = false;
-            for region in &mut regions {
-                if letter == region.letter && region.is_adjacent_to(x, y) {
-                    region.add(x, y);
-                    got_added = true;
-                    break;
-                }
-            }
-            if regions.is_empty() || !got_added{
-                regions.push(Region::new(letter, x, y));
-            }
+            area: 0,
+            perimeter: 0
         }
     }
-    regions
+
+    fn tally(&mut self, grid: &Vec<Vec<char>>, visited: &mut Vec<Vec<bool>>, x: usize, y: usize) {
+        if y >= grid.len() || x >= grid[y].len() || grid[y][x] != self.letter {
+            self.perimeter += 1;
+            return;
+        }
+        if visited[y][x] {
+            return;
+        }
+        visited[y][x] = true;
+        self.area += 1;
+        self.tally(grid, visited, x + 1, y);
+        self.tally(grid, visited, x, y + 1);
+        if x > 0 {
+            self.tally(grid, visited, x - 1, y);
+        } else {
+            self.perimeter += 1;
+        }
+        if y > 0 {
+            self.tally(grid, visited, x, y - 1);
+        } else {
+            self.perimeter += 1;
+        }
+    }
 }
 
 pub fn run_a(input: &str) -> usize {
-    let regions = extract_regions(load(input));
+    let (grid, mut visited) = load(input);
     let mut sum = 0;
-    for region in regions {
-        println!("{}: {} {}", region.letter, region.area(), region.perimeter());
-        sum += region.area() * region.perimeter();
+    for y in 0..grid.len() {
+        for x in 0..grid[y].len() {
+            if !visited[y][x] {
+                let mut region = Region::new(grid[y][x]);
+                region.tally(&grid, &mut visited, x, y);
+                sum += region.area * region.perimeter;
+            }
+        }
     }
     sum
 }
