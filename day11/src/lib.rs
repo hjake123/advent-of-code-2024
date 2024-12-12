@@ -1,3 +1,7 @@
+use std::thread::{self, JoinHandle};
+
+use std::collections::HashMap;
+
 fn parse(input: &str) -> Vec<u64> {
     let mut vec: Vec<u64> = Vec::new();
     for word in input.split_whitespace() {
@@ -6,52 +10,67 @@ fn parse(input: &str) -> Vec<u64> {
     vec
 }
 
-fn print_rocks(rocks: &Vec<u64>){
-    for rock in rocks {
-        print!("{} ", rock);
-    }
-    println!();
-}
-
 fn digit_count(n: u64) -> usize {
     let n = n.to_string();
     n.len()
 }
 
 fn split_by_digits(n: u64) -> (u64, u64){
-    let mut n = n.to_string();
-    let right = n.split_off(n.len() / 2);
-    (n.parse().unwrap(), right.parse().unwrap())
+    let n = n.to_string();
+    let (left, right) = n.split_at(n.len() / 2);
+    (left.parse().unwrap(), right.parse().unwrap())
 }
 
-fn blink(rocks: &mut Vec<u64>) {
-    let mut i = 0;
-    while i < rocks.len() {
-        if rocks[i] == 0 {
-            rocks[i] = 1;
-        } else if digit_count(rocks[i]) % 2 == 0 {
-            let (a, b) = split_by_digits(rocks[i]);
-            rocks.remove(i);
-            rocks.insert(i, b);
-            rocks.insert(i, a);
-            i += 1;
-        } else {
-            rocks[i] = rocks[i] * 2024;
-        }
-        i += 1;
+type RockCache = HashMap<(u64, usize), usize>;
+
+fn blink(rock: u64, depth: usize, max_depth: usize, cache: &mut RockCache) -> usize {
+    if cache.contains_key(&(rock, depth)) {
+        return *cache.get(&(rock, depth)).unwrap()
     }
+    if depth == max_depth {
+        cache.insert((rock, depth), 1);
+        return 1
+    }
+    if rock == 0 {
+        let result = blink(1, depth + 1, max_depth, cache);
+        cache.insert((rock, depth), result);
+        return result
+    }
+    if digit_count(rock) % 2 == 0 {
+        let (left, right) = split_by_digits(rock);
+        let l_result = blink(left, depth + 1, max_depth, cache);
+        let result = l_result + blink(right, depth + 1, max_depth, cache);
+        cache.insert((rock, depth), result);
+        return result
+    }
+    let result = blink(rock * 2024, depth + 1, max_depth, cache);
+    cache.insert((rock, depth), result);
+    result
+}
+
+fn run(rocks: Vec<u64>, max_depth: usize) -> usize {
+    let mut handles: Vec<JoinHandle<usize>> = Vec::new();
+    for rock in rocks {
+        handles.push(thread::spawn(move || {
+            let mut cache: RockCache = HashMap::new();
+            blink(rock, 0, max_depth, &mut cache)
+        }));
+    }
+    let mut sum = 0;
+    for handle in handles {
+        sum += handle.join().unwrap()
+    }
+    sum
 }
 
 pub fn run_a(input: &str) -> usize {
-    let mut rocks = parse(input);
-    for _ in 0..25{
-        blink(&mut rocks);
-    }
-    rocks.len()
+    let rocks = parse(input);
+    run(rocks, 25)
 }
 
-pub fn run_b(input: &str) -> i32 {
-    0
+pub fn run_b(input: &str) -> usize {
+    let rocks = parse(input);
+    run(rocks, 75)
 }
 
 #[cfg(test)]
@@ -60,21 +79,8 @@ mod tests {
     use std::fs;
 
     #[test]
-    fn one_blink() {
-        let mut rocks = parse("0 1 10 99 999");
-        blink(&mut rocks);
-        assert_eq!(rocks, parse("1 2024 1 0 9 9 2021976"));
-    }
-
-    #[test]
     fn a() {
         let result = run_a(&fs::read_to_string("./test.txt").expect("No test file!"));
         assert_eq!(result, 55312);
-    }
-
-    #[test]
-    fn b() {
-        let result = run_b(&fs::read_to_string("./test.txt").expect("No test file!"));
-        assert_eq!(result, 1);
     }
 }
