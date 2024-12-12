@@ -7,15 +7,29 @@ struct Region {
 }
 
 impl Region {
-    pub fn new(letter: char) -> Region{
+    pub fn new(letter: char, x: usize, y: usize) -> Region{
+        let mut points = Vec::new();
+        points.push((x, y));
         Region{
             letter,
-            points: Vec::new()
+            points
         }   
     }
 
     pub fn add(&mut self, x: usize, y: usize) {
         self.points.push((x, y));
+    }
+
+    pub fn is_adjacent_to(&self, x: usize, y: usize) -> bool {
+        for point in &self.points {
+            if x > 0 && point.0 == x - 1 
+            || y > 0 && point.1 == y - 1
+            || point.0 == x + 1
+            || point.1 == y + 1 {
+                return true
+            }
+        }
+        false
     }
 
     pub fn area(&self) -> usize{
@@ -42,58 +56,41 @@ impl Region {
     }
 }
 
-fn is_touching_same_letter(letter: char, x: usize, y: usize, current_row: &Vec<char>, grid: &Vec<Vec<char>>) -> bool {
-    if y > grid.len() || x >= current_row.len() {
-        return false
-    }
-    (x > 0 && current_row[x - 1] == letter) || (y > 0 && grid[y - 1][x] == letter) || (x < (current_row.len() - 1) && current_row[x + 1] == letter)
-}
-
-fn add_to_region(letter: char, x: usize, y: usize, regions: &mut Vec<Region>) {
-    for region in &mut (*regions) {
-        if letter == region.letter && (x > 0 && region.points.contains(&(x-1, y)) || (y > 0 && region.points.contains(&(x, y-1)))){
-            region.add(x, y);
-            return
-        }
-    }
-    let mut region = Region::new(letter);
-    region.add(x, y);
-    let regions = regions;
-    regions.push(region)
-}
-
-fn extract_regions(input: &str) -> Vec<Region> {
-    let mut regions: Vec<Region> = Vec::new();
+fn load(input: &str) -> Vec<Vec<char>> {
     let mut grid: Vec<Vec<char>> = Vec::new();
-    let mut y: usize = 0;
-    let mut x: usize = 0;
     for line in input.lines() {
         let mut row = Vec::new();
         for letter in line.chars() {
             row.push(letter);
         }
-
-        for letter in &row {
-            let letter = *letter;
-            if is_touching_same_letter(letter, x, y, &row, &grid) {
-                add_to_region(letter, x, y, &mut regions);
-            } else {
-                let mut r = Region::new(letter);
-                r.add(x, y);
-                regions.push(r)
-            }
-            x += 1;
-        }
-
         grid.push(row);
-        x = 0;
-        y += 1;
+    }
+    grid
+}
+
+fn extract_regions(grid: Vec<Vec<char>>) -> Vec<Region> {
+    let mut regions: Vec<Region> = Vec::new();
+    for y in 0..grid.len() {
+        for x in 0..grid[y].len() {
+            let letter = grid[y][x];
+            let mut got_added = false;
+            for region in &mut regions {
+                if letter == region.letter && region.is_adjacent_to(x, y) {
+                    region.add(x, y);
+                    got_added = true;
+                    break;
+                }
+            }
+            if regions.is_empty() || !got_added{
+                regions.push(Region::new(letter, x, y));
+            }
+        }
     }
     regions
 }
 
 pub fn run_a(input: &str) -> usize {
-    let regions = extract_regions(input);
+    let regions = extract_regions(load(input));
     let mut sum = 0;
     for region in regions {
         println!("{}: {} {}", region.letter, region.area(), region.perimeter());
