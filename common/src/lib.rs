@@ -2,19 +2,19 @@ use core::fmt;
 use std::fmt::Display;
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub struct Point {
-    pub x: usize, 
-    pub y: usize
+pub struct Point<T> {
+    pub x: T, 
+    pub y: T
 }
 
-impl Display for Point {
+impl<T: std::fmt::Display> Display for Point<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
     }
 }
 
-impl Point {
-    pub fn offset(&self, x: usize, y: usize) -> Point {
+impl<T: std::ops::Add<Output = T> + Copy> Point<T> {
+    pub fn offset(&self, x: T, y: T) -> Point<T> {
         Point{x: self.x + x, y: self.y + y}
     }   
 }
