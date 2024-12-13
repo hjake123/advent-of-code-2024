@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 pub fn load(input: &str) -> (Vec<Vec<char>>, Vec<Vec<usize>>) {
     let mut grid: Vec<Vec<char>> = Vec::new();
     let mut region_markers: Vec<Vec<usize>> = Vec::new();
@@ -134,7 +136,7 @@ impl Edge {
     }
 }
 
-pub fn scan_fence(region_grid: &Vec<Vec<usize>>, region_id: usize, start_x: usize, start_y: usize) -> usize {
+pub fn scan_fence(region_grid: &Vec<Vec<usize>>, region_id: usize, start_x: usize, start_y: usize, visited_top_of: &mut HashSet<(usize, usize)>) -> usize {
     let mut edge = Edge::new();
     let start_edge = Edge::new();
     let mut x = start_x;
@@ -151,6 +153,9 @@ pub fn scan_fence(region_grid: &Vec<Vec<usize>>, region_id: usize, start_x: usiz
             }
             None => None
         };
+        if edge.n == 0 {
+            visited_top_of.insert((x, y));
+        }
 
         if next_cell.is_some_and(|cell| region_grid[cell.1][cell.0] == region_id) {
             if front_next_cell.is_some_and(|cell| region_grid[cell.1][cell.0] == region_id) {

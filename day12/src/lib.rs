@@ -20,6 +20,8 @@ use std::collections::{HashMap, HashSet};
 
 pub fn run_b(input: &str) -> usize {
     let (grid, mut region_grid) = b::load(input);
+    // dbg!(&grid);
+
     let mut region_id = 1;
     let mut areas: HashMap<usize, usize> = HashMap::new();
     for y in 0..grid.len() {
@@ -30,16 +32,34 @@ pub fn run_b(input: &str) -> usize {
             }
         }
     }
-    let mut counted: HashSet<usize> = HashSet::new();
-    let mut sum: usize = 0;
+    // dbg!(&region_grid);
+    let mut counted: HashMap<usize, HashSet<(usize, usize)>> = HashMap::new();
+    let mut side_counts: HashMap<usize, usize> = HashMap::new();
     for y in 0..region_grid.len() {
         for x in 0..region_grid[y].len() {
             region_id = region_grid[y][x];
-            if !counted.contains(&region_id) {
-                counted.insert(region_id);
-                sum += areas.get(&region_id).unwrap() * b::scan_fence(&region_grid, region_id, x, y);
+            if !counted.contains_key(&region_id) {
+                counted.insert(region_id, HashSet::new());
+            }
+            // println!("({}, {}) : {}", x, y, region_id);
+            // dbg!(&counted);
+            // dbg!(&counted.get(&region_id).unwrap().contains(&(x, y)));
+            // dbg!(y > 0 && region_grid[y - 1][x] == region_id);
+            // dbg!(!(counted.get(&region_id).unwrap().contains(&(x, y))) && !(y > 0 && region_grid[y - 1][x] == region_id));
+            if !(counted.get(&region_id).unwrap().contains(&(x, y))) && !(y > 0 && region_grid[y - 1][x] == region_id){
+                side_counts.insert(region_id, side_counts.get(&region_id).unwrap_or(&0) +  
+                    b::scan_fence(&region_grid, region_id, x, y, counted.get_mut(&region_id).unwrap()));
+                // dbg!(&side_counts);
             }
         }
+    }
+
+    // dbg!(&areas);
+    // dbg!(&side_counts);
+    // dbg!(&counted);
+    let mut sum: usize = 0;
+    for region_id in areas.keys() {
+        sum += areas.get(region_id).unwrap() * side_counts.get(region_id).unwrap();
     }
     sum
 }
@@ -77,6 +97,12 @@ mod tests {
     fn b_tiny_2() {
         let result = run_b("11\n01");
         assert_eq!(result, 22);
+    }
+
+    #[test]
+    fn b_tiny_box() {
+        let result = run_b("111\n101\n111");
+        assert_eq!(result, 68);
     }
 
     #[test]
