@@ -74,6 +74,10 @@ fn run_day(daynum: Option<i32>) {
             println!("Day 13a: {}", day13::run_a(&fs::read_to_string("./input/day13.txt").unwrap()));
             println!("Day 13b: {}", day13::run_b(&fs::read_to_string("./input/day13.txt").unwrap()));
         },
+        Some(14) => {
+            println!("Day 14a: {}", day14::run_a(&fs::read_to_string("./input/day14.txt").unwrap()));
+            println!("Day 14b: {}", day14::run_b(&fs::read_to_string("./input/day14.txt").unwrap()));
+        },
         Some(n) => {
             println!("Can't run day number {}", n)
         }
