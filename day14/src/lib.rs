@@ -79,9 +79,38 @@ pub fn run_a(input: &str) -> u32 {
     upper_left * upper_right * lower_left * lower_right
 }
 
-pub fn run_b() -> &'static str {
-    // Answer can't be determined automatically.
-    "6511 (found manually -- use 'tree' to generate)"
+pub fn run_b(input: &str) -> i32 {
+    // Originally found that the answer is 6512 for my dataset using manual inspection.
+    // Reddit has informed me that safety score is a good enough heuristic to find the answer also,
+    // so this is implementing that solution.
+    // The original tree building solution is maintained for honesty in trees.rs
+
+    let mut robots: Vec<Robot> = Vec::new();
+    let mut lines = input.lines();
+
+    let first_line = lines.next().expect("Empty file!");
+    let wh: Vec<i32> = first_line.split_whitespace().map(|n| n.parse::<i32>().unwrap()).collect();
+    let width = wh[0];
+    let height = wh[1];
+
+    for line in lines {
+        robots.push(Robot::from_line(line));
+    }
+
+    let mut low_score = i32::max_value();
+    let mut low_score_n = 0;
+    for n in 1..(width*height) {
+        for robot in &mut robots {
+            robot.travel(1, width, height);
+        }
+        let (upper_left, upper_right, lower_left, lower_right) = tally_robots(&robots, width, height);
+        let score: i32 = (upper_left * upper_right * lower_left * lower_right).try_into().unwrap();
+        if low_score > score {
+            low_score = score;
+            low_score_n = n;
+        }
+    }
+    low_score_n
 }
 
 #[cfg(test)]
