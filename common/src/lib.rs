@@ -1,5 +1,5 @@
 use core::fmt;
-use std::fmt::Display;
+use std::{fmt::Display, ops::{Index, IndexMut}};
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub struct Point<T> {
@@ -26,7 +26,19 @@ pub struct Grid<T> {
 
 #[allow(dead_code)]
 impl Grid<char> {
-    fn new(input: &str) -> Self {
+    pub fn of_size(width: usize, height: usize, filler: char) -> Self {
+        let mut vec = Vec::new();
+        for _ in 0..height {
+            let mut row = Vec::new();
+            for _ in 0..width {
+                row.push(filler);
+            }
+            vec.push(row);
+        }
+        Grid{ vec }
+    }
+
+    pub fn parse(input: &str) -> Self {
         let mut grid: Vec<Vec<char>> = Vec::new();        
         for line in input.lines() {
             let mut row = Vec::new();
@@ -42,7 +54,7 @@ impl Grid<char> {
 
 #[allow(dead_code)]
 impl Grid<i32> {
-    fn new(input: &str) -> Self {
+    pub fn parse(input: &str) -> Self {
         let mut grid: Vec<Vec<i32>> = Vec::new();        
         for line in input.lines() {
             let mut row = Vec::new();
@@ -52,6 +64,50 @@ impl Grid<i32> {
             grid.push(row);
         }
         Grid{vec: grid}
+    }
+}
+
+impl<T> Index<(usize, usize)> for Grid<T> {
+    type Output = T;
+
+    fn index(&self, index: (usize, usize)) -> &Self::Output {
+        &self.vec[index.1][index.0]
+    }
+}
+
+impl<T> Index<(i32, i32)> for Grid<T> {
+    type Output = T;
+
+    fn index(&self, index: (i32, i32)) -> &Self::Output {
+        let x: usize = index.0.try_into().unwrap();
+        let y: usize = index.1.try_into().unwrap();
+        &self[(x, y)]
+    }
+}
+
+impl<T> IndexMut<(usize, usize)> for Grid<T> {
+    fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
+        &mut self.vec[index.1][index.0]
+    }
+}
+
+impl<T> IndexMut<(i32, i32)> for Grid<T> {
+    fn index_mut(&mut self, index: (i32, i32)) -> &mut Self::Output {
+        let x: usize = index.0.try_into().unwrap();
+        let y: usize = index.1.try_into().unwrap();
+        &mut self[(x, y)]
+    }
+}
+
+impl<T: std::fmt::Display> Display for Grid<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for row in &self.vec {
+            for item in row {
+                let _ = write!(f, "{} ", item);
+            }
+            let _ = writeln!(f, "");
+        }
+        Ok(())
     }
 }
 

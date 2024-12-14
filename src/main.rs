@@ -8,6 +8,13 @@ fn main() {
     let mut daynum: Option<i32> = None;
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
+        // Day 14 tree finder special case
+        if args[1] == "tree"{
+            let _ = day14::trees::tree_finder(&fs::read_to_string("./input/day14.txt").unwrap());
+            println!("Generated trees.txt file. Good luck!");
+            return;
+        }
+
         let result = args[1].parse();
         if result.is_err() {
             println!("Invalid day number {}", args[1]);
@@ -76,7 +83,7 @@ fn run_day(daynum: Option<i32>) {
         },
         Some(14) => {
             println!("Day 14a: {}", day14::run_a(&fs::read_to_string("./input/day14.txt").unwrap()));
-            println!("Day 14b: {}", day14::run_b(&fs::read_to_string("./input/day14.txt").unwrap()));
+            println!("Day 14b: {}", day14::run_b());
         },
         Some(n) => {
             println!("Can't run day number {}", n)
