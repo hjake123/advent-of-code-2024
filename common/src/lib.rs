@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{fmt::Display, ops::{Index, IndexMut}};
+use std::{error::Error, fmt::Display, ops::{Index, IndexMut}, str::Lines};
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub struct Point<T> {
@@ -24,7 +24,6 @@ pub struct Grid<T> {
     vec: Vec<Vec<T>>
 }
 
-#[allow(dead_code)]
 impl Grid<char> {
     pub fn of_size(width: usize, height: usize, filler: char) -> Self {
         let mut vec = Vec::new();
@@ -50,9 +49,24 @@ impl Grid<char> {
         }
         Grid{vec: grid}
     }
+
+    pub fn parse_until(lines: &mut Lines<'_>, end_condition: impl Fn(&str)->bool) -> Self {
+        let mut grid: Vec<Vec<char>> = Vec::new();        
+        for line in lines {
+            if end_condition(line) {
+                break;
+            }
+            let mut row = Vec::new();
+    
+            for letter in line.chars() {
+                row.push(letter);
+            }
+            grid.push(row);
+        }
+        Grid{vec: grid}
+    }
 }
 
-#[allow(dead_code)]
 impl Grid<i32> {
     pub fn parse(input: &str) -> Self {
         let mut grid: Vec<Vec<i32>> = Vec::new();        
@@ -103,12 +117,112 @@ impl<T: std::fmt::Display> Display for Grid<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for row in &self.vec {
             for item in row {
-                let _ = write!(f, "{} ", item);
+                let _ = write!(f, "{}", item);
             }
             let _ = writeln!(f, "");
         }
         Ok(())
     }
+}
+
+#[derive(Debug)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right
+}
+
+impl Direction {
+    pub fn right_from(&self) -> Self {
+        match *self {
+            Self::Up => {
+                Self::Right
+            }
+            Self::Right => {
+                Self::Down
+            }
+            Self::Down => {
+                Self::Left
+            }
+            Self::Left => {
+                Self::Up
+            }
+        }
+    }
+
+    pub fn offset(&self, x: usize, y: usize) -> Option<(usize, usize)> {
+        match *self {
+            Self::Up => {
+                if y == 0 {
+                    return None
+                }
+                Some((x, y-1))
+            }
+            Self::Right => {
+                Some((x+1, y))
+            }
+            Self::Down => {
+                Some((x, y+1))
+            }
+            Self::Left => {
+                if x == 0 {
+                    return None
+                }
+                Some((x-1, y))
+            }
+        }
+    }
+
+    pub fn to_char(&self) -> char {
+        match *self {
+            Self::Up => {
+                '^'
+            }
+            Self::Right => {
+                '>'
+            }
+            Self::Down => {
+                'v'
+            }
+            Self::Left => {
+                '<'
+            }
+        }
+    }
+
+    pub fn from_char(ch: char) -> Result<Self, Box<dyn Error>> {
+        match ch {
+            '^' => Ok(Self::Up),
+            '<' => Ok(Self::Left),
+            '>' => Ok(Self::Right),
+            'v' => Ok(Self::Down),
+            _ => Err(Box::new(CommonError::DirectionParseError("Invalid direction character".to_owned())))
+        }
+    }
+
+    pub fn is_dir_char_other_then_own(&self, ch: char) -> bool {
+        ch != self.to_char() && (ch == '^' || ch == '<' || ch == '>' || ch == 'v')
+    }
+}
+
+#[derive(Debug)]
+enum CommonError {
+    DirectionParseError(String)
+}
+
+impl Display for CommonError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::DirectionParseError(message) => {
+                write!(f, "{}", message)
+            }
+        }
+    }
+}
+
+impl Error for CommonError{
+    
 }
 
 #[cfg(test)]
