@@ -176,7 +176,7 @@ impl<T: std::fmt::Display> Display for Grid<T> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Direction {
     Up,
     Down,

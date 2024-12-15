@@ -101,6 +101,54 @@ fn widen(warehouse: &Grid<char>) -> Grid<char> {
     Grid::new(widened)
 }
 
+fn scan_box_parts_above(here: Point<usize>, warehouse: &Grid<char>) -> Vec<(Point<usize>, char)> {
+    let mut parts = Vec::new();
+    if warehouse[here] == '[' {
+        parts.push((here, '['));
+        let there = here.offset(1, 0);
+        parts.push((there, ']'));
+        let above = Point{x: there.x, y: there.y - 1};
+        parts.append(&mut scan_box_parts_above(above, warehouse));
+    } else if warehouse[here] == ']' {
+        parts.push((here, ']'));
+        let there = Point{x: here.x - 1, y: here.y};
+        parts.push((there, '['));
+        let above = Point{x: there.x, y: there.y - 1};
+        parts.append(&mut scan_box_parts_above(above, warehouse));
+    } else {
+        return parts;
+    }
+    let above = Point{x: here.x, y: here.y - 1};
+    if warehouse[above] == '[' || warehouse[above] == ']' {
+        parts.append(&mut scan_box_parts_above(above, warehouse));
+    } 
+    parts
+}
+
+fn scan_box_parts_below(here: Point<usize>, warehouse: &Grid<char>) -> Vec<(Point<usize>, char)> {
+    let mut parts = Vec::new();
+    if warehouse[here] == '[' {
+        parts.push((here, '['));
+        let there = here.offset(1, 0);
+        parts.push((there, ']'));
+        let below: Point<usize> = there.offset(0, 1);
+        parts.append(&mut scan_box_parts_below(below, warehouse));
+    } else if warehouse[here] == ']' {
+        parts.push((here, ']'));
+        let there = Point{x: here.x - 1, y: here.y};
+        parts.push((there, '['));
+        let below = there.offset(0, 1);
+        parts.append(&mut scan_box_parts_below(below, warehouse));
+    } else {
+        return parts;
+    }
+    let below = here.offset(0, 1);
+    if warehouse[below] == '[' || warehouse[below] == ']' {
+        parts.append(&mut scan_box_parts_below(below, warehouse));
+    } 
+    parts
+}
+
 fn robot_move_wide(robot: Point<usize>, command: Direction, warehouse: &mut Grid<char>) -> Point<usize> {
     let robot_target = command.offset_point(robot);
     if robot_target.is_none() {
@@ -126,17 +174,61 @@ fn robot_move_wide(robot: Point<usize>, command: Direction, warehouse: &mut Grid
             return robot;
         }
         // At this point, we are definitely pushing the boxes.
-        let push_target = push_target.unwrap();
-        let mut pressure_wave = robot_target;
-        let mut held_item = warehouse[robot];
-        warehouse[robot] = '.';
-        while push_target != pressure_wave {
-            let about_to_hold_item = warehouse[pressure_wave];
-            warehouse[pressure_wave] = held_item;
-            held_item = about_to_hold_item;
-            pressure_wave = command.offset_point(pressure_wave).unwrap();
+
+        if command == Direction::Left || command == Direction::Right {
+            let push_target = push_target.unwrap();
+            let mut pressure_wave = robot_target;
+            let mut held_item = warehouse[robot];
+            warehouse[robot] = '.';
+            while push_target != pressure_wave {
+                let about_to_hold_item = warehouse[pressure_wave];
+                warehouse[pressure_wave] = held_item;
+                held_item = about_to_hold_item;
+                pressure_wave = command.offset_point(pressure_wave).unwrap();
+            }
+            warehouse[push_target] = held_item;
+        } else if command == Direction::Up {
+            let mut affected_box_parts = scan_box_parts_above(robot_target, warehouse);
+            for part in &affected_box_parts {
+                let above = Point{x: part.0.x, y: part.0.y - 1};
+                if warehouse[above] == '#' {
+                    return robot;
+                }
+            }
+            for part in &mut affected_box_parts {
+                let above = Point{x: part.0.x, y: part.0.y - 1};
+                warehouse[part.0] = '.';
+                part.0 = above;
+            }
+            for part in &affected_box_parts {
+                warehouse[part.0] = part.1;
+                // println!("moving!");
+                // println!("{}", warehouse);
+            }
+            warehouse[robot_target] = '@';
+            warehouse[robot] = '.';
+        } else {
+            // Command is Direction.Down
+            let mut affected_box_parts = scan_box_parts_below(robot_target, warehouse);
+            for part in &affected_box_parts {
+                let above = Point{x: part.0.x, y: part.0.y + 1};
+                if warehouse[above] == '#' {
+                    return robot;
+                }
+            }
+            for part in &mut affected_box_parts {
+                let above = Point{x: part.0.x, y: part.0.y + 1};
+                warehouse[part.0] = '.';
+                part.0 = above;
+            }
+            for part in &affected_box_parts {
+                warehouse[part.0] = part.1;
+                // println!("moving!");
+                // println!("{}", warehouse);
+            }
+            warehouse[robot_target] = '@';
+            warehouse[robot] = '.';
         }
-        warehouse[push_target] = held_item;
         return robot_target;
     }
     
@@ -149,9 +241,10 @@ pub fn run_b(input: &str) -> usize {
     let mut robot = warehouse.find(&'@').expect("No robot!");
 
     for command in commands {
-        println!("{}", warehouse);
+        // println!("{}: \n{}", command.to_char(), warehouse);
         robot = robot_move_wide(robot, command, &mut warehouse);
     }
+    println!("{}", warehouse);
 
     let mut sum = 0;
     for y in 0..warehouse.height() {
@@ -182,8 +275,13 @@ mod tests {
     }
 
     #[test]
-    fn b_small() {
-        run_b(&fs::read_to_string("./small.txt").expect("No test file!"));
+    fn b_moving() {
+        run_b(&fs::read_to_string("./moving.txt").expect("No test file!"));
+    }
+
+    #[test]
+    fn b_moving_2() {
+        run_b(&fs::read_to_string("./moving2.txt").expect("No test file!"));
     }
 
     #[test]
