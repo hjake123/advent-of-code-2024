@@ -7,6 +7,12 @@ pub struct Point<T> {
     pub y: T
 }
 
+impl Point<usize> {
+    pub fn in_bounds(&self, width: usize, height: usize) -> bool {
+        self.x < width && self.y < height
+    }
+}
+
 impl<T: std::fmt::Display> Display for Point<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
@@ -22,6 +28,37 @@ impl<T: std::ops::Add<Output = T> + Copy> Point<T> {
 #[derive(Debug, PartialEq)]
 pub struct Grid<T> {
     vec: Vec<Vec<T>>
+}
+
+impl<T> Grid<T> {
+    pub fn new(vec: Vec<Vec<T>>) -> Self {
+        Grid { vec }
+    }
+
+    pub fn width(&self) -> usize {
+        self.vec[0].len()
+    }
+
+    pub fn height(&self) -> usize {
+        self.vec.len()
+    }
+
+    pub fn vec(&self) -> &Vec<Vec<T>> {
+        &self.vec
+    }
+}
+
+impl<T: PartialEq> Grid<T> {
+    pub fn find(&self, item: &T) -> Option<Point<usize>> {
+        for y in 0..self.vec.len() {
+            for x in 0..self.vec[y].len() {
+                if self[(x, y)] == *item {
+                    return Some(Point{x, y})
+                }
+            }
+        }
+        None
+    }
 }
 
 impl Grid<char> {
@@ -99,6 +136,14 @@ impl<T> Index<(i32, i32)> for Grid<T> {
     }
 }
 
+impl<T> Index<Point<usize>> for Grid<T> {
+    type Output = T;
+
+    fn index(&self, index: Point<usize>) -> &Self::Output {
+        &self[(index.x, index.y)]
+    }
+}
+
 impl<T> IndexMut<(usize, usize)> for Grid<T> {
     fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
         &mut self.vec[index.1][index.0]
@@ -110,6 +155,12 @@ impl<T> IndexMut<(i32, i32)> for Grid<T> {
         let x: usize = index.0.try_into().unwrap();
         let y: usize = index.1.try_into().unwrap();
         &mut self[(x, y)]
+    }
+}
+
+impl<T> IndexMut<Point<usize>> for Grid<T> {
+    fn index_mut(&mut self, index: Point<usize>) -> &mut Self::Output {
+        &mut self.vec[index.y][index.x]
     }
 }
 
@@ -149,6 +200,11 @@ impl Direction {
                 Self::Up
             }
         }
+    }
+
+    pub fn offset_point(&self, point: Point<usize>) -> Option<Point<usize>> {
+        let coords = self.offset(point.x, point.y)?;
+        Some(Point{x: coords.0, y: coords.1})
     }
 
     pub fn offset(&self, x: usize, y: usize) -> Option<(usize, usize)> {
