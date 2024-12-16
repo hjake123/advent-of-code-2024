@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, iter};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use common::*;
 
@@ -57,54 +57,70 @@ pub fn run_a(input: &str) -> usize {
     search_maze(&grid, reindeer, 0, &mut minima).expect("No valid path through maze!")
 }
 
-fn search_maze_b(maze: &Grid<char>, reindeer: Reindeer, score_so_far: usize, target_score: usize, path: &HashSet<Point<usize>>) -> Option<HashSet<Point<usize>>> {
-    if score_so_far > target_score {
-        return None
-    }
-
-    let mut my_path = Box::new(path.clone());
-    my_path.insert(reindeer.pos);
-    let mut any_path_good = false;
-
-    if maze[reindeer.pos] == 'E' {
-        return Some(*my_path)
-    }
-
-    let front_pos = reindeer.facing.offset_point(reindeer.pos).expect("Out of bounds!");
-    if front_pos.in_bounds(maze.width(), maze.height()) && maze[front_pos] != '#' {
-        let steps = search_maze_b(maze, Reindeer{pos:front_pos, facing: reindeer.facing}, score_so_far + 1, target_score, &my_path);
-        if steps.is_some() {
-            my_path.extend(steps.unwrap());
-            any_path_good = true;
-        }
-    }
-
-    let left_of_facing = reindeer.facing.left_from();
-    let left_pos = left_of_facing.offset_point(reindeer.pos).expect("Out of bounds!");
-    if left_pos.in_bounds(maze.width(), maze.height()) && maze[left_pos] != '#' {
-        let steps = search_maze_b(maze, Reindeer{pos:left_pos, facing: left_of_facing}, score_so_far + 1001, target_score, &my_path);
-        if steps.is_some() {
-            my_path.extend(steps.unwrap());
-            any_path_good = true;
-        }
-    }
-
-    let right_of_facing = reindeer.facing.right_from();
-    let right_pos = right_of_facing.offset_point(reindeer.pos).expect("Out of bounds!");
-    if right_pos.in_bounds(maze.width(), maze.height()) && maze[right_pos] != '#' {
-        let steps = search_maze_b(maze, Reindeer{pos:right_pos, facing: right_of_facing}, score_so_far + 1001, target_score, &my_path);
-        if steps.is_some() {
-            my_path.extend(steps.unwrap());
-            any_path_good = true;
-        }
-    }
-
-    if any_path_good {
-        return Some(*my_path)
-    }
-    None
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+struct Path {
+    points: Box<HashSet<Point<usize>>>,
+    score: usize,
+    cursor: Reindeer
 }
 
+#[allow(dead_code)]
+fn find_paths(maze: &Grid<char>, reindeer: Reindeer, target_score: usize) -> VecDeque<Path> {
+    let mut paths = VecDeque::new();
+    let mut terminal_paths = VecDeque::new();
+
+    paths.push_back(Path { points: Box::new(HashSet::new()), score: 0, cursor: reindeer });
+    loop {
+        let path = paths.pop_front();
+        if path.is_none() {
+            break;
+        }
+        let path = path.unwrap();
+
+        if path.score > target_score {
+            // Move on without it, destroying this path.
+            continue;
+        }
+
+        if maze[path.cursor.pos] == 'E' {
+            let mut new_path = path.clone();
+            new_path.points.insert(path.cursor.pos);
+            terminal_paths.push_back(new_path);
+            continue;
+        }
+
+        let front_pos = path.cursor.facing.offset_point(path.cursor.pos).unwrap_or(Point{x:0, y:0});
+        if maze[front_pos] != '#' {
+            let mut new_path = path.clone();
+            new_path.cursor.pos = front_pos;
+            new_path.score += 1;
+            new_path.points.insert(path.cursor.pos);
+            paths.push_back(new_path);
+        }
+
+        let left_pos = path.cursor.facing.left_from().offset_point(path.cursor.pos).unwrap_or(Point{x:0, y:0});
+        if maze[left_pos] != '#' {
+            let mut new_path = path.clone();
+            new_path.cursor.pos = left_pos;
+            new_path.cursor.facing = path.cursor.facing.left_from();
+            new_path.score += 1001;
+            new_path.points.insert(path.cursor.pos);
+            paths.push_back(new_path);
+        }
+
+        let right_pos = path.cursor.facing.right_from().offset_point(path.cursor.pos).unwrap_or(Point{x:0, y:0});
+        if maze[right_pos] != '#' {
+            let mut new_path = path.clone();
+            new_path.cursor.pos = right_pos;
+            new_path.cursor.facing = path.cursor.facing.right_from();
+            new_path.score += 1001;
+            new_path.points.insert(path.cursor.pos);
+            paths.push_back(new_path);
+        }
+    }
+    terminal_paths
+}
 
 pub fn run_b(input: &str) -> usize {
     let grid: Grid<char> = Grid::parse(input);
@@ -113,7 +129,11 @@ pub fn run_b(input: &str) -> usize {
         facing: Direction::Right
     };
     let minimal_score = search_maze(&grid, reindeer, 0, &mut Box::new(HashMap::new())).expect("No valid path through maze!");
-    search_maze_b(&grid, reindeer, 0, minimal_score, &mut HashSet::new()).unwrap().len()
+    let mut visited: HashSet<Point<usize>> = HashSet::new();
+    for path in find_paths(&grid, reindeer, minimal_score){
+        visited.extend(path.points.iter());
+    }
+    visited.len()
 }
 
 #[cfg(test)]

@@ -1,5 +1,6 @@
 use std::fs;
 use std::env;
+use std::thread;
 
 // Update this each time you start a day.
 const MAX_DAY: i32 = 16;
@@ -83,8 +84,16 @@ fn run_day(daynum: Option<i32>) {
             println!("Day 15b: {}", day15::run_b(&fs::read_to_string("./input/day15.txt").unwrap()));
         },
         Some(16) => {
-            println!("Day 16a: {}", day16::run_a(&fs::read_to_string("./input/day16.txt").unwrap()));
-            println!("Day 16b: {}", day16::run_b(&fs::read_to_string("./input/day16.txt").unwrap()));
+            let builder: thread::Builder = thread::Builder::new().stack_size(1024 * 1024 * 5);
+            let handle: Result<thread::JoinHandle<()>, std::io::Error> = builder.spawn(|| {
+                println!("Day 16a: {}", day16::run_a(&fs::read_to_string("./input/day16.txt").unwrap()));
+                println!("Day 16b: {}", day16::run_b(&fs::read_to_string("./input/day16.txt").unwrap()));
+            });
+            if handle.is_err() {
+                println!("Failed to spawn day 16 thread!");
+            } else {
+                let _ = handle.unwrap().join();
+            }
         },
         Some(n) => {
             println!("Can't run day number {}", n)
