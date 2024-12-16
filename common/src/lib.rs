@@ -104,19 +104,19 @@ impl Grid<char> {
     }
 }
 
-impl Grid<i32> {
-    pub fn parse(input: &str) -> Self {
-        let mut grid: Vec<Vec<i32>> = Vec::new();        
-        for line in input.lines() {
-            let mut row = Vec::new();
-            for word in line.split_whitespace() {
-                row.push(word.parse().expect(&("Invalid integer ".to_owned() + word)));
-            }
-            grid.push(row);
-        }
-        Grid{vec: grid}
-    }
-}
+// impl Grid<i32> {
+    // pub fn parse(input: &str) -> Self {
+    //     let mut grid: Vec<Vec<i32>> = Vec::new();        
+    //     for line in input.lines() {
+    //         let mut row = Vec::new();
+    //         for word in line.split_whitespace() {
+    //             row.push(word.parse().expect(&("Invalid integer ".to_owned() + word)));
+    //         }
+    //         grid.push(row);
+    //     }
+    //     Grid{vec: grid}
+    // }
+// }
 
 impl<T> Index<(usize, usize)> for Grid<T> {
     type Output = T;
@@ -176,7 +176,7 @@ impl<T: std::fmt::Display> Display for Grid<T> {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Direction {
     Up,
     Down,
@@ -198,6 +198,23 @@ impl Direction {
             }
             Self::Left => {
                 Self::Up
+            }
+        }
+    }
+
+    pub fn left_from(&self) -> Self {
+        match *self {
+            Self::Up => {
+                Self::Left
+            }
+            Self::Right => {
+                Self::Up
+            }
+            Self::Down => {
+                Self::Right
+            }
+            Self::Left => {
+                Self::Down
             }
         }
     }

@@ -244,7 +244,7 @@ pub fn run_b(input: &str) -> usize {
         // println!("{}: \n{}", command.to_char(), warehouse);
         robot = robot_move_wide(robot, command, &mut warehouse);
     }
-    println!("{}", warehouse);
+    // println!("{}", warehouse);
 
     let mut sum = 0;
     for y in 0..warehouse.height() {
