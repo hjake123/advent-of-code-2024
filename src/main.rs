@@ -95,6 +95,10 @@ fn run_day(daynum: Option<i32>) {
                 let _ = handle.unwrap().join();
             }
         },
+        Some(17) => {
+            println!("Day 17a: {}", day17::run_a(&fs::read_to_string("./input/day17.txt").unwrap()));
+            println!("Day 17b: {}", day17::run_b(&fs::read_to_string("./input/day17.txt").unwrap()));
+        },
         Some(n) => {
             println!("Can't run day number {}", n)
         }

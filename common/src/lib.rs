@@ -298,5 +298,9 @@ impl Error for CommonError{
     
 }
 
+pub fn extract_numbers(line: &str) -> Vec<i32> {
+    line.replace(|ch: char| !ch.is_ascii_digit() && ch != '-', " ").split_whitespace().map(|chunk| chunk.parse::<i32>().unwrap()).collect()
+}
+
 #[cfg(test)]
 mod tests {}
