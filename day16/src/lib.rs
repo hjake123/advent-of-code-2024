@@ -164,7 +164,7 @@ fn find_paths(maze: &Grid<char>, reindeer: Reindeer, target_score: usize) -> Has
     terminal_path_points
 }
 
-pub fn run_b(input: &str) -> &'static str {
+pub fn run_b(_input: &str) -> &'static str {
     // let grid: Grid<char> = Grid::parse(input);
     // let reindeer = Reindeer { 
     //     pos: grid.find(&'S').expect("No start tile!"),
