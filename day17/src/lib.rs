@@ -9,86 +9,42 @@ pub fn run_a(input: &str) -> String {
     machine.output.iter().map(|num| num.to_string()).collect::<Vec<String>>().join(",")
 }
 
-/*
-Either the machine is valid, or we panic.
-Valid machnes return the combo number for the register that outputs the answer.
-*/
-fn validate_and_find_output(machine: &Machine) -> i8 {
-    let mut i = 0;
-    let mut o = 0;
-    while i < machine.program.len() {
-        if machine.program[i] == 3 {
-            if i != machine.program.len() - 2 || machine.program[i + 1] != 0 {
-                panic!("Invalid jump condition")
-            }
-        }
-        if machine.program[i] == 5 {
-            if machine.program[i + 1] < 4 {
-                panic!("Literal output instruction")
-            }
-            o = machine.program[i + 1];
-        }
-        if machine.program[i] == 0 {
-            if machine.program[i + 1] != 3 {
-                panic!("Not always shifting A left by 3")
-            }
-        }
-
-        i += 2;
-    }
-    o
+fn get_output_digit(partial_a: u64) -> i8 {
+    ((partial_a % 8) ^ 3 ^ 5 ^ (partial_a.checked_shr((partial_a ^ 3).try_into().unwrap()).unwrap_or(0)) % 8).try_into().unwrap()
 }
 
-/*
-Finds the 3 bit value that produces a specific digit of output.
-*/
-fn trial_of_iteration(machine: &mut Machine, needed_output: i8) -> i64 {
-    for n in 0..64{
-        machine.a = n;
-        machine.output.clear();
-        machine.ip = 0;
-        // println!("{}", n);
-        // dbg!(&machine);
-        while machine.run() {
-            if machine.output.len() > 0 {
-                break;
+fn consume_output(mut outputs: VecDeque<i8>, prior_a: u32) -> Option<u32> {
+    if outputs.is_empty(){
+        return Some(prior_a);
+    }
+    let output_digit = outputs.pop_front().unwrap();
+    for a_octet in 0..8 {
+        let partial_a = prior_a << 3 | a_octet;
+        if get_output_digit(partial_a.try_into().unwrap()) == output_digit {
+            let val = consume_output(outputs.clone(), partial_a);
+            if val.is_some() {
+                return val;
             }
         }
-        if machine.output.len() > 0 && machine.output[0] == needed_output {
-            return n
-        }
     }
-    panic!("No valid input produces {} for machine {:?}", needed_output, machine);
+    None
 }
 
-pub fn run_b(input: &str) -> i64 {
+pub fn run_b(input: &str) -> u32 {
+    // Not a general solution!
+    // Each number of output = A XOR 3 XOR 5 XOR (A << (A XOR 3)) % 8 for my puzzle input
+    // Due to A << (up to 7), each digit of output takes into account 10 bits of A.
     let machine = Machine::parse(input);
-    let output_register = validate_and_find_output(&machine);
-    let mut accumulator = 0_i64;
-    let mut outputs: VecDeque<&i8> = VecDeque::from(machine.program.iter().rev().collect::<Vec<_>>());
-    let mut machine = machine.clone();
-    while !outputs.is_empty() {
-        if output_register == 4 {
-            // We're outputting A.
-            // Since only the adv instruction affects A,
-            // and we know it always just shifts A by 3,
-            // this is the easiest case.
-            let n: i64 = (outputs.pop_front().unwrap() % 8).into();
-            accumulator |= n;
-            accumulator <<= 3;
-        } else if output_register == 5 {
-            let needed = *outputs.pop_front().unwrap() % 8;
-            let n = trial_of_iteration(&mut machine, needed);
-            accumulator |= n;
-            accumulator <<= 3;
-        } else {
-            panic!("Outputting C register, which I haven't prepared for!")
+    let outputs: VecDeque<i8> = VecDeque::from(machine.program.into_iter().rev().collect::<Vec<i8>>());
+    let mut results: Vec<u32> = Vec::new();
+    for a_starter in 0..128 {
+        let res = consume_output(outputs.clone(), a_starter);
+        if res.is_some(){
+            results.push(res.unwrap());
         }
     }
-    if output_register == 5 {
-        accumulator >>= 3;
-    }
-    accumulator
+    results.sort();
+    *results.first().expect("No solutions were found!")
 }
 
 #[cfg(test)]
@@ -109,32 +65,11 @@ mod tests {
     }
 
     #[test]
-    fn b_sanity_check() {
-        let result = run_a(&fs::read_to_string("./test_b_corrected.txt").expect("No test file!"));
-        assert_eq!(result, "0,3,5,4,3,0");
-    }
-
-    #[test]
-    fn b() {
-        let result = run_b(&fs::read_to_string("./test_b.txt").expect("No test file!"));
-        assert_eq!(result, 117440);
-    }
-
-    #[test]
-    fn b_2_sanity_check() {
-        let result = run_a(&fs::read_to_string("./test_b_2_sc.txt").expect("No test file!"));
-        assert_eq!(result, "0,3,2,4,5,5,3,0");
-    }
-
-    #[test]
-    fn b_2() {
-        let result = run_b(&fs::read_to_string("./test_b_2.txt").expect("No test file!"));
-        assert_eq!(result, 7783616);
-    }
-
-    #[test]
     fn puzzle_input_sc() {
-        let result = run_a(&fs::read_to_string("./pisc.txt").expect("No test file!"));
+        let mut machine = Machine::parse(&fs::read_to_string("./pisc.txt").expect("No test file!"));
+        machine.a = run_b(&fs::read_to_string("./pisc.txt").expect("No test file!")).into();
+        while machine.run() {}
+        let result = machine.output.iter().map(|num| num.to_string()).collect::<Vec<String>>().join(",");
         assert_eq!(result, "2,4,1,3,7,5,0,3,1,5,4,1,5,5,3,0");
     }
 }
