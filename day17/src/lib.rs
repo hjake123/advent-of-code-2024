@@ -40,15 +40,11 @@ pub fn run_b(input: &str) -> u64 {
     // Not a general solution!
     let machine = Machine::parse(input);
     let outputs: VecDeque<i8> = VecDeque::from(machine.program.into_iter().rev().collect::<Vec<i8>>());
-    let mut results: Vec<u64> = Vec::new();
-    for a_starter in 0..128 {
-        let res = consume_output(outputs.clone(), a_starter);
-        if res.is_some(){
-            results.push(res.unwrap());
-        }
+    let res = consume_output(outputs.clone(), 0);
+    if res.is_some(){
+        return res.unwrap();
     }
-    results.sort();
-    *results.first().expect("No solutions were found!")
+    0
 }
 
 #[cfg(test)]
