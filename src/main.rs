@@ -106,7 +106,7 @@ fn run_day(daynum: Option<i32>) {
                 println!("Day 18b: {}", day18::run_b(&fs::read_to_string("./input/day18.txt").unwrap()));
             });
             if handle.is_err() {
-                println!("Failed to spawn day 16 thread!");
+                println!("Failed to spawn day 18 thread!");
             } else {
                 let _ = handle.unwrap().join();
             }
