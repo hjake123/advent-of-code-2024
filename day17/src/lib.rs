@@ -42,18 +42,18 @@ fn validate_and_find_output(machine: &Machine) -> i8 {
 /*
 Finds the 3 bit value that produces a specific digit of output.
 */
-fn trial_of_iteration(machine: &mut Machine, needed_output: i8) -> i32 {
-    for n in 0..8{
+fn trial_of_iteration(machine: &mut Machine, needed_output: i8) -> i64 {
+    for n in 0..64{
         machine.a = n;
-        println!("{}", n);
+        machine.output.clear();
+        machine.ip = 0;
+        // println!("{}", n);
+        // dbg!(&machine);
         while machine.run() {
             if machine.output.len() > 0 {
                 break;
             }
-            dbg!(&machine);
         }
-        machine.ip = 0;
-        machine.output.clear();
         if machine.output.len() > 0 && machine.output[0] == needed_output {
             return n
         }
@@ -61,10 +61,10 @@ fn trial_of_iteration(machine: &mut Machine, needed_output: i8) -> i32 {
     panic!("No valid input produces {} for machine {:?}", needed_output, machine);
 }
 
-pub fn run_b(input: &str) -> i32 {
+pub fn run_b(input: &str) -> i64 {
     let machine = Machine::parse(input);
     let output_register = validate_and_find_output(&machine);
-    let mut accumulator = 0_i32;
+    let mut accumulator = 0_i64;
     let mut outputs: VecDeque<&i8> = VecDeque::from(machine.program.iter().rev().collect::<Vec<_>>());
     let mut machine = machine.clone();
     while !outputs.is_empty() {
@@ -73,17 +73,20 @@ pub fn run_b(input: &str) -> i32 {
             // Since only the adv instruction affects A,
             // and we know it always just shifts A by 3,
             // this is the easiest case.
-            let n: i32 = (outputs.pop_front().unwrap() % 8).into();
+            let n: i64 = (outputs.pop_front().unwrap() % 8).into();
             accumulator |= n;
             accumulator <<= 3;
         } else if output_register == 5 {
-            let needed = *outputs.pop_front().unwrap();
+            let needed = *outputs.pop_front().unwrap() % 8;
             let n = trial_of_iteration(&mut machine, needed);
             accumulator |= n;
             accumulator <<= 3;
         } else {
             panic!("Outputting C register, which I haven't prepared for!")
         }
+    }
+    if output_register == 5 {
+        accumulator >>= 3;
     }
     accumulator
 }
@@ -118,8 +121,20 @@ mod tests {
     }
 
     #[test]
+    fn b_2_sanity_check() {
+        let result = run_a(&fs::read_to_string("./test_b_2_sc.txt").expect("No test file!"));
+        assert_eq!(result, "0,3,2,4,5,5,3,0");
+    }
+
+    #[test]
     fn b_2() {
         let result = run_b(&fs::read_to_string("./test_b_2.txt").expect("No test file!"));
-        assert_eq!(result, 871256);
+        assert_eq!(result, 7783616);
+    }
+
+    #[test]
+    fn puzzle_input_sc() {
+        let result = run_a(&fs::read_to_string("./pisc.txt").expect("No test file!"));
+        assert_eq!(result, "2,4,1,3,7,5,0,3,1,5,4,1,5,5,3,0");
     }
 }

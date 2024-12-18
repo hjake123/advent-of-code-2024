@@ -1,8 +1,8 @@
 #[derive(Debug, Clone)]
 pub struct Machine {
-    pub a: i32,
-    pub b: i32, 
-    pub c: i32,
+    pub a: i64,
+    pub b: i64, 
+    pub c: i64,
     pub ip: usize,
     pub program: Vec<i8>,
     pub output: Vec<i8>
@@ -10,10 +10,10 @@ pub struct Machine {
 
 impl Machine {
     pub fn parse(input: &str) -> Self {
-        let mut numbers = common::extract_numbers(input).into_iter();
-        let a = numbers.next().expect("Invalid machine schema!");
-        let b = numbers.next().expect("Invalid machine schema!");
-        let c = numbers.next().expect("Invalid machine schema!");
+        let mut numbers = common::extract_numbers_i64(input).into_iter();
+        let a = numbers.next().expect("Invalid machine schema!").into();
+        let b = numbers.next().expect("Invalid machine schema!").into();
+        let c = numbers.next().expect("Invalid machine schema!").into();
         let mut program: Vec<i8> = Vec::new();
         let output: Vec<i8> = Vec::new();
         for op in numbers {
@@ -69,11 +69,11 @@ impl Machine {
         true
     }
 
-    fn get_literal(&self) -> i32 {
+    fn get_literal(&self) -> i64 {
         self.program[self.ip + 1].into()
     }
 
-    fn get_combo(&self) -> i32 {
+    fn get_combo(&self) -> i64 {
         let combo = self.program[self.ip + 1];
         match combo {
             0 | 1 | 2 | 3 => {

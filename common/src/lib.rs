@@ -302,5 +302,9 @@ pub fn extract_numbers(line: &str) -> Vec<i32> {
     line.replace(|ch: char| !ch.is_ascii_digit() && ch != '-', " ").split_whitespace().map(|chunk| chunk.parse::<i32>().unwrap()).collect()
 }
 
+pub fn extract_numbers_i64(line: &str) -> Vec<i64> {
+    line.replace(|ch: char| !ch.is_ascii_digit() && ch != '-', " ").split_whitespace().map(|chunk| chunk.parse::<i64>().unwrap()).collect()
+}
+
 #[cfg(test)]
 mod tests {}
