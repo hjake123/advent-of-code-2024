@@ -1,10 +1,10 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Machine {
-    a: i32,
-    b: i32, 
-    c: i32,
-    ip: usize,
-    program: Vec<i8>,
+    pub a: i32,
+    pub b: i32, 
+    pub c: i32,
+    pub ip: usize,
+    pub program: Vec<i8>,
     pub output: Vec<i8>
 }
 
