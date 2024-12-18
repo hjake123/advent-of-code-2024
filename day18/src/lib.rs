@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use common::*;
 
@@ -41,11 +41,7 @@ fn search_maze(maze: &Grid<char>, cursor: Point<usize>, steps_so_far: usize, min
     min
 }
 
-pub fn run_a(input: &str) -> usize {
-    run_a_inner(input, 71, 71, 1024)
-}
-
-pub fn run_a_inner(input: &str, width: usize, height: usize, iters: usize) -> usize {
+fn run_a_inner(input: &str, width: usize, height: usize, iters: usize) -> usize {
     let mut grid = Grid::of_size(width, height, '.');
     let mut count = 0;
     for line in input.lines() {
@@ -61,8 +57,80 @@ pub fn run_a_inner(input: &str, width: usize, height: usize, iters: usize) -> us
     search_maze(&grid, Point{x:0, y:0}, 0, &mut Box::new(HashMap::new())).expect("No result!")
 }
 
-pub fn run_b(input: &str) -> i32 {
-    0
+pub fn run_a(input: &str) -> usize {
+    run_a_inner(input, 71, 71, 1024)
+}
+
+fn escape_maze(maze: &Grid<char>, cursor: Point<usize>, visited: &mut Box<HashSet<Point<usize>>>) -> bool {
+    if !cursor.in_bounds(maze.width(), maze.height()){
+        return false
+    }
+    if maze[cursor] == '#' {
+        return false
+    }
+    if maze[cursor] == 'E' {
+        return true
+    }
+    if visited.get(&cursor).is_some() {
+        return false
+    }
+    visited.insert(cursor);
+    
+    let left = Direction::Left.offset_point(cursor);
+    if left.is_some_and(|nval| escape_maze(maze, nval, visited)) {
+        return true;
+    }
+
+    let right = Direction::Right.offset_point(cursor);
+    if right.is_some_and(|nval| escape_maze(maze, nval, visited)) {
+        return true;
+    }
+
+    let down = Direction::Down.offset_point(cursor);
+    if down.is_some_and(|nval| escape_maze(maze, nval, visited)) {
+        return true;
+    }
+
+    let up = Direction::Up.offset_point(cursor);
+    if up.is_some_and(|nval| escape_maze(maze, nval, visited)) {
+        return true;
+    }
+    
+    false
+}
+
+fn run_b_inner(input: &str, width: usize, height: usize, iters: usize) -> Point<usize> {
+    let mut grid = Grid::of_size(width, height, '.');
+    let mut count = 0;
+    let mut lines = input.lines();
+    for _ in 0..iters {
+        let numbers = common::extract_numbers(lines.next().expect("Ran out of coordinates!"));
+        grid[(numbers[0], numbers[1])] = '#';
+        count += 1;
+        if count >= iters{
+            break;
+        }
+    }
+    grid[(width-1, height-1)] = 'E';
+    let mut i = 1024;
+    loop {
+        i += 1;
+        let new_line = lines.next();
+        if new_line.is_none() {
+            panic!("No solution!");
+        }
+        let numbers = common::extract_numbers(new_line.unwrap());
+        let point: Point<usize> = Point{x:numbers[0].try_into().unwrap(), y:numbers[1].try_into().unwrap()};
+        grid[point] = '#';
+        if !escape_maze(&grid, Point{x:0, y:0}, &mut Box::new(HashSet::new())) {
+            return point
+        }
+    }
+}
+
+pub fn run_b(input: &str) -> String {
+    let point = run_b_inner(input, 71, 71, 1024);
+    point.x.to_string() + "," + &point.y.to_string()
 }
 
 #[cfg(test)]
@@ -78,7 +146,7 @@ mod tests {
 
     #[test]
     fn b() {
-        let result = run_b(&fs::read_to_string("./test.txt").expect("No test file!"));
-        assert_eq!(result, 1);
+        let result = run_b_inner(&fs::read_to_string("./test.txt").expect("No test file!"), 7, 7, 12);
+        assert_eq!(result, Point{x:6, y:1});
     }
 }

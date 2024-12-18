@@ -3,7 +3,7 @@ use std::env;
 use std::thread;
 
 // Update this each time you start a day.
-const MAX_DAY: i32 = 17;
+const MAX_DAY: i32 = 18;
 
 fn main() {
     let mut daynum: Option<i32> = None;
