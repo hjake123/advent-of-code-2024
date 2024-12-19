@@ -3,7 +3,7 @@ use std::env;
 use std::thread;
 
 // Update this each time you start a day.
-const MAX_DAY: i32 = 18;
+const MAX_DAY: i32 = 19;
 
 fn main() {
     let mut daynum: Option<i32> = None;
@@ -110,6 +110,10 @@ fn run_day(daynum: Option<i32>) {
             } else {
                 let _ = handle.unwrap().join();
             }
+        },
+        Some(19) => {
+            println!("Day 19a: {}", day19::run_a(&fs::read_to_string("./input/day19.txt").unwrap()));
+            println!("Day 19b: {}", day19::run_b(&fs::read_to_string("./input/day19.txt").unwrap()));
         },
         Some(n) => {
             println!("Can't run day number {}", n)
