@@ -112,9 +112,7 @@ fn run_b_inner(input: &str, width: usize, height: usize, iters: usize) -> Point<
         }
     }
     grid[(width-1, height-1)] = 'E';
-    let mut i = 1024;
     loop {
-        i += 1;
         let new_line = lines.next();
         if new_line.is_none() {
             panic!("No solution!");
