@@ -41,7 +41,7 @@ pub fn run_a(input: &str) -> i32 {
     possible_count
 }
 
-fn count_possibilities(sequence: &str, towels: &Vec<String>, cache: &mut HashMap<String, i32>) -> i32 {
+fn count_possibilities(sequence: &str, towels: &Vec<String>, cache: &mut HashMap<String, i64>) -> i64 {
     if cache.contains_key(sequence) {
         return *cache.get(sequence).unwrap();
     }
@@ -64,14 +64,14 @@ fn count_possibilities(sequence: &str, towels: &Vec<String>, cache: &mut HashMap
     sum
 }
 
-pub fn run_b(input: &str) -> i32 {
+pub fn run_b(input: &str) -> i64 {
     let mut lines = input.lines();
     let towels = parse_towels(lines.next().expect("Empty input file!"));
     let _ = lines.next();
     let mut possible_count = 0;
     for pattern in lines {
-        println!("Testing {}", pattern);
-        possible_count += count_possibilities(pattern, &towels, &mut HashMap::new());
+        let count = count_possibilities(pattern, &towels, &mut HashMap::new());
+        possible_count += count;
     }
     possible_count
 }
