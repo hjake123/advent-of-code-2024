@@ -11,6 +11,19 @@ impl Point<usize> {
     pub fn in_bounds(&self, width: usize, height: usize) -> bool {
         self.x < width && self.y < height
     }
+
+    pub fn new(x: usize, y: usize) -> Self {
+        Point{x, y}
+    }
+
+    pub fn offset_by(&self, x: isize, y: isize) -> Option<Self> {
+        let new_x: Result<usize, _> = (self.x as isize - x).try_into();
+        let new_y: Result<usize, _> = (self.y as isize - y).try_into();
+        if new_x.is_err() || new_y.is_err() {
+            return None
+        }
+        Some(Point{x: new_x.unwrap(), y: new_y.unwrap()})
+    }
 }
 
 impl<T: std::fmt::Display> Display for Point<T> {
@@ -25,7 +38,7 @@ impl<T: std::ops::Add<Output = T> + Copy> Point<T> {
     }   
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Grid<T> {
     vec: Vec<Vec<T>>
 }
