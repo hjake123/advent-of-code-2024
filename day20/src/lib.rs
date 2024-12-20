@@ -28,41 +28,45 @@ fn generate_distance_markers(grid: &Grid<char>) -> HashMap<Point<usize>, u64> {
     markers
 }   
 
-fn surrounding_points(point: Point<usize>) -> Vec<Option<Point<usize>>> {
+fn surrounding_points(point: Point<usize>, radius: isize) -> Vec<Option<Point<usize>>> {
     let mut vec = Vec::new();
-    vec.push(point.offset_by(0, 1));
-    vec.push(point.offset_by(0, 2));
-    vec.push(point.offset_by(0, -1));
-    vec.push(point.offset_by(0, -2));
-
-    vec.push(point.offset_by(1, 0));
-    vec.push(point.offset_by(2, 0));
-    vec.push(point.offset_by(-1, 0));
-    vec.push(point.offset_by(-2, 0));
-
-    vec.push(point.offset_by(1, 1));
-    vec.push(point.offset_by(-1, 1));
-    vec.push(point.offset_by(1, -1));
-    vec.push(point.offset_by(-1, -1));
-
+    for yoff in 0..=radius {
+        for xoff in 0..=radius {
+            if xoff == 0 && yoff == 0 {
+                continue;
+            }
+            if xoff + yoff > radius {
+                continue;
+            }
+            vec.push(point.offset_by(xoff, yoff));
+            if xoff != 0 {
+                vec.push(point.offset_by(-xoff, yoff));
+            }
+            if yoff != 0 {
+                vec.push(point.offset_by(xoff, -yoff));
+                if xoff != 0 {
+                    vec.push(point.offset_by(-xoff, -yoff));
+                }
+            }
+        }
+    }
+    
     vec
 }
 
-pub fn run_a_inner(input: &str, threshold: u64) -> u64 {
+pub fn run_inner(input: &str, threshold: u64, radius: isize) -> u64 {
     let grid = Grid::parse(input);
     let markers = generate_distance_markers(&grid);
     let mut count = 0;
     for (marker, current_dist) in &markers {
-        for possible_point in surrounding_points(*marker) {
+        for possible_point in surrounding_points(*marker, radius) {
             if possible_point.is_some_and(|point| {
                 let man_dist: u64 = (marker.x.abs_diff(point.x) + marker.y.abs_diff(point.y)).try_into().unwrap();
-
                 point.in_bounds(grid.width(), grid.height()) 
                 && markers.contains_key(&point) 
                 && markers[&point] > *current_dist 
                 && markers[&point] - *current_dist - man_dist >= threshold
             }) {
-                // println!("{} : {} -> {} : {} = {}", marker, *current_dist, possible_point.unwrap(), markers[&possible_point.unwrap()],  markers[&possible_point.unwrap()] - *current_dist - (marker.x.abs_diff(possible_point.unwrap().x) + marker.y.abs_diff(possible_point.unwrap().y)) as u64 );
                 count += 1;
             }
         }
@@ -71,11 +75,11 @@ pub fn run_a_inner(input: &str, threshold: u64) -> u64 {
 }
 
 pub fn run_a(input: &str) -> u64 {
-    run_a_inner(input, 100)
+    run_inner(input, 100, 2)
 }
 
 pub fn run_b(input: &str) -> u64 {
-    0
+    run_inner(input, 100, 20)
 }
 
 #[cfg(test)]
@@ -85,21 +89,19 @@ mod tests {
 
     #[test]
     fn a() {
-        let result = run_a_inner(&fs::read_to_string("./test.txt").expect("No test file!"), 20);
+        let result = run_inner(&fs::read_to_string("./test.txt").expect("No test file!"), 20, 2);
         assert_eq!(result, 5);
     }
 
     #[test]
     fn a2() {
-        let result = run_a_inner(&fs::read_to_string("./test.txt").expect("No test file!"), 10);
+        let result = run_inner(&fs::read_to_string("./test.txt").expect("No test file!"), 10, 2);
         assert_eq!(result, 10);
     }
 
     #[test]
     fn b() {
-        let result = run_b(&fs::read_to_string("./test.txt").expect("No test file!"));
-        assert_eq!(result, 1);
+        let result = run_inner(&fs::read_to_string("./test.txt").expect("No test file!"), 70, 20);
+        assert_eq!(result, 41);
     }
 }
-
-// 1341 is too high
