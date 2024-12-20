@@ -55,12 +55,14 @@ pub fn run_a_inner(input: &str, threshold: u64) -> u64 {
     for (marker, current_dist) in &markers {
         for possible_point in surrounding_points(*marker) {
             if possible_point.is_some_and(|point| {
+                let man_dist: u64 = (marker.x.abs_diff(point.x) + marker.y.abs_diff(point.y)).try_into().unwrap();
+
                 point.in_bounds(grid.width(), grid.height()) 
                 && markers.contains_key(&point) 
                 && markers[&point] > *current_dist 
-                && markers[&point] - *current_dist >= threshold
+                && markers[&point] - *current_dist - man_dist >= threshold
             }) {
-                // println!("{} -> {} : {} - {} = {}", marker, possible_point.unwrap(), markers[&possible_point.unwrap()], *current_dist, markers[&possible_point.unwrap()] - *current_dist);
+                // println!("{} : {} -> {} : {} = {}", marker, *current_dist, possible_point.unwrap(), markers[&possible_point.unwrap()],  markers[&possible_point.unwrap()] - *current_dist - (marker.x.abs_diff(possible_point.unwrap().x) + marker.y.abs_diff(possible_point.unwrap().y)) as u64 );
                 count += 1;
             }
         }
@@ -85,6 +87,12 @@ mod tests {
     fn a() {
         let result = run_a_inner(&fs::read_to_string("./test.txt").expect("No test file!"), 20);
         assert_eq!(result, 5);
+    }
+
+    #[test]
+    fn a2() {
+        let result = run_a_inner(&fs::read_to_string("./test.txt").expect("No test file!"), 10);
+        assert_eq!(result, 10);
     }
 
     #[test]
