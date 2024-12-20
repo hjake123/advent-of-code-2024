@@ -174,7 +174,7 @@ pub fn run_b(_input: &str) -> &'static str {
     // let mut visited: HashSet<Point<usize>> = HashSet::new();
     // visited.extend(find_paths(&grid, reindeer, minimal_score));
     // visited.len()
-    "(skipped)"
+    ""
 }
 
 #[cfg(test)]
