@@ -4,7 +4,7 @@ Pattern number must be within [0, 2^(numbers.len() - 1))
 fn test_expression(numbers: &Vec<i64>, pattern_number: i32, width: usize, target: i64) -> bool {
     let mut numbers = numbers.iter();
     let mut res = *numbers.next().expect("Tried to test an empty expression!");
-    let mut pattern = format!("{pattern_number:.b}");
+    let mut pattern = format!("{pattern_number:b}");
     while pattern.len() < width {
         pattern.insert(0, '0');
     }
